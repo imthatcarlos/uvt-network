@@ -4,18 +4,7 @@ const UVTCore = artifacts.require('./UVTCore.sol');
 
 const assertRevert = require('../node_modules/zeppelin-solidity/test/helpers/assertRevert');
 const expectEvent = require('../node_modules/zeppelin-solidity/test/helpers/expectEvent');
-
-async function addValidGateway(ledger, account, area = '60641') {
-  return await ledger.addGateway(
-    '127.0.0.1',
-    '41.878114',
-    '-87.629798',
-    'chicago',
-    area,
-    '',
-    {from: account}
-  );
-}
+const addValidGateway = require('./helpers/addValidGateway');
 
 contract('UVTCore', function(accounts) {
   describe('-- Inherited from OpenDeviceRegistry', function() {
