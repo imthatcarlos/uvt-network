@@ -269,7 +269,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     _verifyPayment(gatewayIds.length);
 
     // open the channel and fund it with the account's tokens
-    _reOpenChannel(request.channelId);
+    _reopenChannel(request.channelId);
     require(ERC20(uvtTokenAddress).transferFrom(
       msg.sender, address(this),
       channels[request.channelId].deposit

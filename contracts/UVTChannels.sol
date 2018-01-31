@@ -157,7 +157,7 @@ contract UVTChannels {
     return true;
   }
 
-  function _reOpenChannel(bytes32 id)
+  function _reopenChannel(bytes32 id)
    internal
    returns (bool)
   {
