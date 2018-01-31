@@ -87,13 +87,15 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   // EXTERNAL FUNCTIONS
   //============================================================================
 
+  /**
+   * Transfer UVT tokens to the account in exchange for ETH
+   * TODO: the exchange is 1-1 for demo purposes
+   */
   function buyUVT(uint amount) external payable {
+    require(msg.value == amount);
+
     ERC20 uvtToken = ERC20(uvtTokenAddress);
-
-    // some conversion to require amount in UVT == msg.value in ETH
-
     require(uvtToken.transfer(msg.sender, amount));
-
     PurchasedUVT(msg.sender, amount);
   }
 
