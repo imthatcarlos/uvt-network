@@ -21,8 +21,8 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   // EVENTS
   //============================================================================
 
-  event SearchInitiated(bytes32 indexed id, uint[] indexed invokedGatewayIds,
-      bytes32 indexed endpointId);
+  event SearchInitiated(address indexed owner, bytes32 id, bytes32 endpointId);
+  event InvokeGateway(uint indexed id, bytes32 endpointId, bytes32 requestId);
   event SearchEndpointFound(bytes32 indexed id, uint gatewayId, uint time, string lat, string long);
   event SearchCancelled(bytes32 indexed id, bool gatewaysPaid);
   event SearchExpired(bytes32 indexed id);
@@ -137,7 +137,10 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     accountToRequestIds[msg.sender] = id;
 
     // invoke gateways
-    SearchInitiated(id, gatewayIds, endpointId);
+    SearchInitiated(msg.sender, id, endpointId);
+    for(uint i = 0; i < gatewayIds.length; i++) {
+      InvokeGateway(gatewayIds[i], endpointId, id);
+    }
   }
 
   /**
@@ -260,8 +263,10 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     // sanity check
     require(request.state != SearchState.Searching);
 
+    uint[] memory gatewayIds = channels[request.channelId].gatewayIds;
+
     /* TODO: might not be necessary? */
-    _verifyPayment(channels[request.channelId].gatewayIds.length);
+    _verifyPayment(gatewayIds.length);
 
     // open the channel and fund it with the account's tokens
     _reOpenChannel(request.channelId);
@@ -280,7 +285,10 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     accountToRequestIds[msg.sender] = id;
 
     // invoke gateways
-    SearchInitiated(id, channels[request.channelId].gatewayIds, request.endpointId);
+    SearchInitiated(msg.sender, id, request.endpointId);
+    for(uint i = 0; i < gatewayIds.length; i++) {
+      InvokeGateway(gatewayIds[i], request.endpointId, id);
+    }
   }
 
   /**
