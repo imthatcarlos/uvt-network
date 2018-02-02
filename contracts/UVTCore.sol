@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-pragma experimental ABIEncoderV2;
+//pragma experimental ABIEncoderV2;
 
 import './OpenDeviceRegistry.sol';
 import './UVTChannels.sol';
@@ -14,6 +14,8 @@ import '../node_modules/zeppelin-solidity/contracts/token/ERC20.sol';
  * @dev This contract manages the ODR, payment channels, and the invokation
  * of gateways when a user submits a search request. Certain functionality
  * is limited to the contract's owner, such as manually closing channels.
+ * TODO: Contract is too large, gas exceeds the mainnet gasLimit
+ * OpenDeviceRegistry could be deployed on its own
  */
 contract UVTCore is OpenDeviceRegistry, UVTChannels {
 
@@ -168,9 +170,8 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   {
     uint gatewayId = ownerToGatewayIds[msg.sender];
     SearchRequest storage request = searchRequests[requestId];
-
     // verify the endpoint's signaure
-    _verifyEndpoint(request.endpointId, endpointSig, v);
+    _verifyEndpoint(requestId, request.endpointId, endpointSig, v);
 
     // disburse the funds and close the channel
     _disburseFunds(request.channelId, true, gatewayId, true);
@@ -197,7 +198,9 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     onlyRequestOwner
     returns (bool)
   {
-    if (searchRequests[id].expires > now) {
+    if (searchRequests[id].state == SearchState.Searching &&
+      searchRequests[id].expires < now)
+    {
       // disburse the funds and close the channel
       _disburseFunds(searchRequests[id].channelId, false, 0, true);
       _closeChannel(searchRequests[id].channelId);
@@ -278,8 +281,9 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     // opened with same number of gateways, so new cost is the same
     channels[request.channelId].deposit = channels[request.channelId].deposit + channels[request.channelId].deposit;
 
-    // update search state
+    // update search state & expire time
     request.state = SearchState.Searching;
+    request.expires = now + 1 hours;
 
     // re-add to lookup table
     accountToRequestIds[msg.sender] = id;
@@ -292,9 +296,23 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   }
 
   /**
-   * Returns all information for one search request
+   * Returns the id of the owner's search request
+   * Can only be called by the owner of the request
    */
-  function getMySearchRequest()
+  function getSearchRequestId()
+    external
+    view
+    onlyRequestOwner
+    returns (bytes32 id)
+  {
+    return accountToRequestIds[msg.sender];
+  }
+
+  /**
+   * Returns all information for the owner's search request
+   * Can only be called by the owner of the request
+   */
+  function getSearchRequest()
     external
     view
     onlyRequestOwner
@@ -308,6 +326,48 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     )
   {
     SearchRequest memory request = searchRequests[accountToRequestIds[msg.sender]];
+
+    owner = request.owner;
+    endpointId = request.endpointId;
+    invokedGateways = request.invokedGateways;
+    channelId = request.channelId;
+    state = request.state;
+    expires = request.expires;
+  }
+
+  /**
+   * Returns the state of the owner's search request
+   * Can only be called by the owner of the request
+   */
+  function getSearchRequestStatus()
+    external
+    view
+    onlyRequestOwner
+    returns (SearchState state)
+  {
+    return searchRequests[accountToRequestIds[msg.sender]].state;
+  }
+
+  /**
+   * Returns all information for the given search request
+   * Can only be called by the contract owner
+   *
+   * @param id The SearchRequest id
+   */
+  function getSearchRequestById(bytes32 id)
+    external
+    view
+    onlyOwner
+    returns (
+      address owner,
+      bytes32 endpointId,
+      uint[] invokedGateways,
+      bytes32 channelId,
+      SearchState state,
+      uint expires
+    )
+  {
+    SearchRequest memory request = searchRequests[id];
 
     owner = request.owner;
     endpointId = request.endpointId;
@@ -362,14 +422,14 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
       if (endointFound) {
         // pay gatewayIdFound 20% from everyone else's
         uint othersPayout = allPayout - SafeMath.div(allPayout, 5);
-        uint founderPayout = SafeMath.mul(
+        uint finderPayout = SafeMath.mul(
           SafeMath.div(allPayout, 5),
           (channel.gatewayIds.length - 1)
         ) + allPayout;
 
         for (uint i = 0; i < channel.gatewayIds.length; i++) {
           if (channel.gatewayIds[i] == gatewayIdFound) {
-            if (!uvtToken.transfer(gateways[channel.gatewayIds[i]].owner, founderPayout)) {
+            if (!uvtToken.transfer(gateways[channel.gatewayIds[i]].owner, finderPayout)) {
               return false;
             }
           } else {
@@ -433,7 +493,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
    * @param h           Data for the endpoint's signed data [hash, r, s]
    * @param v           The "v" value of the endpoint signaure
    */
-  function _verifyEndpoint(bytes32 requestId, bytes32[3] h, uint8 v)
+  function _verifyEndpoint(bytes32 requestId, bytes32 endpointId, bytes32[3] h, uint8 v)
     internal
     view
   {
