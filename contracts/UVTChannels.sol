@@ -89,7 +89,7 @@ contract UVTChannels {
     paidOut = channel.paidOut;
   }
 
-  function getChannelStatus(bytes32 id)
+  function getChannelState(bytes32 id)
     external
     validChannel(id)
     constant
