@@ -107,6 +107,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
    * A channel is created between the user and the invoked gateways, depositing
    * UVT tokens from user's account.
    * Invoked gateways are notified of the request.
+   * The search is set to expire in 1 hour
    *
    * @param endpointId      The id of the endpoint gateways are to find
    * @param gatewayIds The ids of gateways to be invoked
@@ -229,9 +230,9 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     notExpired(id)
     onlyRequestOwner
   {
-    // has it been 15 minutes?
+    // diff between expiry and now should be > 45 min for refund
     bool shouldPayGateways;
-    if ((searchRequests[id].expires - now) < 15 minutes) {
+    if ((searchRequests[id].expires - now) > 45 minutes) {
       shouldPayGateways = false;
     } else {
       shouldPayGateways = true;
@@ -254,27 +255,29 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
    * Renews the search request with the same parameters
    * Can only be called if the state is != Searching
    * NOTE: only possible because we don't clear the request OR channels from storage...
-   * TODO: should be possible without an extra transaction, just update the channel's value
+   * TODO: we should do this without an extra transaction, just update the channel's value
+   * and notify the gateways to extend the expiry
    */
-  function renewSearch(bytes32 id)
+  /* function renewSearch(bytes32 id)
     external
     validRequest(id)
     onlyRequestOwner
   {
     SearchRequest storage request = searchRequests[id];
 
-    // sanity check
+    // can only renew an expired or cancelled request
     require(request.state != SearchState.Searching);
 
     uint[] memory gatewayIds = channels[request.channelId].gatewayIds;
 
-    /* TODO: might not be necessary? */
+    // might not be necessary?
     _verifyPayment(gatewayIds.length);
 
     // open the channel and fund it with the account's tokens
     _reopenChannel(request.channelId);
     require(ERC20(uvtTokenAddress).transferFrom(
-      msg.sender, address(this),
+      msg.sender,
+      address(this),
       channels[request.channelId].deposit
     ));
 
@@ -293,7 +296,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     for(uint i = 0; i < gatewayIds.length; i++) {
       InvokeGateway(gatewayIds[i], request.endpointId, id);
     }
-  }
+  } */
 
   /**
    * Returns the id of the owner's search request
