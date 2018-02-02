@@ -47,6 +47,9 @@ async function createValidSearchRequest(ledger, token, account) {
   return await ledger.createSearchRequest(endpointId, [0,1,2], {from: account});
 }
 
+/**
+ * Signs data regarding the endpoint with the account's address
+ */
 function signEndpointData(account) {
   var messageHash = web3.sha3(endpointId, endpointSecret);
   var sig = web3.eth.sign(account, messageHash).slice(2);
@@ -445,6 +448,120 @@ contract('UVTCore', function(accounts) {
           await increaseTime(twoHours);
 
           var tx = await ledger.searchExpired(requestId, {from: accounts[1]});
+
+          var data = await ledger.getSearchRequestById(requestId);
+          var state = await ledger.getChannelState(data[3]);
+          assert.equal(state, 1, 'the channel state is ChannelState.Closed');
+
+          expectEvent.inTransaction(tx, 'ChannelClosed');
+        });
+      });
+    });
+  });
+
+  describe('cancelSearch', function() {
+    it('updates the search state and emits an event', async() => {
+      var contracts = await setupContracts();
+      var ledger = contracts[0];
+      var token = contracts[1];
+
+      await addValidGateways(ledger, accounts);
+      await createValidSearchRequest(ledger, token, accounts[1]);
+      var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+      var tx = await ledger.cancelSearch(requestId, {from: accounts[1]});
+      var data = await ledger.getSearchRequestById(requestId);
+      assert.equal(data[4].toNumber(), 2, 'the request state is SearchState.Cancelled');
+
+      expectEvent.inTransaction(tx, 'SearchCancelled');
+    });
+
+    it('refunds the account if within the grace period of 15 minutes', async() => {
+      var contracts = await setupContracts();
+      var ledger = contracts[0];
+      var token = contracts[1];
+
+      await addValidGateways(ledger, accounts);
+      await createValidSearchRequest(ledger, token, accounts[1]);
+      var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+      var balanceBefore = await token.balanceOf(accounts[1]);
+      var tx = await ledger.cancelSearch(requestId, {from: accounts[1]});
+      var balanceAfter = await token.balanceOf(accounts[1]);
+      assert.equal(web3.toDecimal(balanceAfter), web3.toDecimal(balanceBefore) + uvtFee, 'user was refunded');
+    });
+
+    it('pays out the gateways equally if past the grace period of 15 minutes', async() => {
+      var contracts = await setupContracts();
+      var ledger = contracts[0];
+      var token = contracts[1];
+
+      await addValidGateways(ledger, accounts);
+      await createValidSearchRequest(ledger, token, accounts[1]);
+      var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+      var seconds = 60 * 16;
+      await increaseTime(seconds);
+
+      await ledger.cancelSearch(requestId, {from: accounts[1]});
+
+      // if the uvtFee was 30, everyone gets 10
+      var gateway1Balance = await token.balanceOf(accounts[5]);
+      var gateway2Balance = await token.balanceOf(accounts[6]);
+      var gateway3Balance = await token.balanceOf(accounts[7]);
+      assert.equal(web3.toDecimal(gateway1Balance), web3.toDecimal(gateway2Balance), 'first 2 paid the same');
+      assert.equal(web3.toDecimal(gateway1Balance), web3.toDecimal(gateway3Balance), 'as was the third');
+    });
+
+    it('should not allow anyone but the request owner to cancel', async() => {
+      var contracts = await setupContracts();
+      var ledger = contracts[0];
+      var token = contracts[1];
+
+      await addValidGateways(ledger, accounts);
+      await createValidSearchRequest(ledger, token, accounts[1]);
+      var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+      try {
+        await ledger.cancelSearch(requestId, {from: accounts[2]});
+        assert.fail('it should have thrown before');
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('should not allow call when the request is already expired', async() => {
+      var contracts = await setupContracts();
+      var ledger = contracts[0];
+      var token = contracts[1];
+
+      await addValidGateways(ledger, accounts);
+      await createValidSearchRequest(ledger, token, accounts[1]);
+      var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+      var seconds = 60 * 61;
+      await increaseTime(seconds);
+
+      try {
+        await ledger.cancelSearch(requestId, {from: accounts[1]});
+        assert.fail('it should have thrown before');
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    describe('-- Inherited from UVTChannels', function() {
+      describe('_closeChannel', function() {
+        it('changes the channel state to Closed and emits an event', async() => {
+          var contracts = await setupContracts();
+          var ledger = contracts[0];
+          var token = contracts[1];
+
+          await addValidGateways(ledger, accounts);
+          await createValidSearchRequest(ledger, token, accounts[1]);
+          var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+
+          var tx = await ledger.cancelSearch(requestId, {from: accounts[1]});
 
           var data = await ledger.getSearchRequestById(requestId);
           var state = await ledger.getChannelState(data[3]);
