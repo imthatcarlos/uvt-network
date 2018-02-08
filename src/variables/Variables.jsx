@@ -242,6 +242,16 @@ var style = {
             margin: 0,
             padding: 0
         }
+    },
+
+    RingLoader: {
+
+          width: defaultWidth,
+          margin: 0,
+          padding: 0,
+          textAlign: 'center',
+          verticalAlign: 'middle'
+
     }
 }
 

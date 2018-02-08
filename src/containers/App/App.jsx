@@ -14,6 +14,11 @@ import {style} from "variables/Variables.jsx";
 
 import appRoutes from 'routes/app.jsx';
 
+import getContracts from 'utils/getContracts';
+
+import Async from 'react-promise'
+import { ScaleLoader } from 'react-spinners';
+
 class App extends Component {
     constructor(props){
         super(props);
@@ -56,7 +61,7 @@ class App extends Component {
     }
     componentDidMount(){
         this.setState({_notificationSystem: this.refs.notificationSystem});
-        var _notificationSystem = this.refs.notificationSystem;
+        {/*var _notificationSystem = this.refs.notificationSystem;
         var color = Math.floor((Math.random() * 4) + 1);
         var level;
         switch (color) {
@@ -75,7 +80,7 @@ class App extends Component {
             default:
                 break;
         }
-        {/*_notificationSystem.addNotification({
+        _notificationSystem.addNotification({
             title: (<span data-notify="icon" className="pe-7s-gift"></span>),
             message: (
                 <div>
@@ -100,31 +105,51 @@ class App extends Component {
                     <Sidebar {...this.props} />
                     <div id="main-panel" className="main-panel">
                         <Header {...this.props}/>
-                            <Switch>
-                                {
-                                    appRoutes.map((prop,key) => {
-                                        if(prop.name === "Notifications")
+                            <Async
+                                promise={getContracts}
+                                catch={(error) => {return<div>Error getting Metamask and contracts</div>}}
+                                pending={
+                                    <div style={style}>
+                                      <ScaleLoader
+                                          color={'#000'}
+                                          loading={true}
+                                      />  Getting Metamask and contracts
+                                    </div>}
+                                then={(results) => {
+                                return <Switch>
+                                    {
+                                        appRoutes.map((prop,key) => {
+                                            if(prop.name === "Notifications")
+                                                return (
+                                                    <Route
+                                                        path={prop.path}
+                                                        key={key}
+                                                        render={routeProps =>
+                                                           <prop.component
+                                                               {...routeProps}
+                                                               handleClick={this.handleNotificationClick}
+                                                           />}
+                                                    />
+                                                );
+                                            if(prop.redirect)
+                                                return (
+                                                    <Redirect from={prop.path} to={prop.to} key={key}/>
+                                                );
                                             return (
-                                                <Route
-                                                    path={prop.path}
-                                                    key={key}
-                                                    render={routeProps =>
-                                                       <prop.component
-                                                           {...routeProps}
-                                                           handleClick={this.handleNotificationClick}
-                                                       />}
-                                                />
+
+                                                <Route path={prop.path} key={key} render={(routeProps) => (
+                                                    <prop.component {...routeProps}
+                                                        web3={results.web3}
+                                                        uvtToken={results.uvtToken}
+                                                        uvtCore={results.uvtCore}
+                                                    />
+                                                )}/>
                                             );
-                                        if(prop.redirect)
-                                            return (
-                                                <Redirect from={prop.path} to={prop.to} key={key}/>
-                                            );
-                                        return (
-                                            <Route path={prop.path} component={prop.component} key={key}/>
-                                        );
-                                    })
-                                }
-                            </Switch>
+                                        })
+                                    }
+                                </Switch>
+                            }}
+                            />
                         <Footer />
                     </div>
                 </div>

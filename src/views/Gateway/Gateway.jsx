@@ -10,12 +10,28 @@ import Button from 'elements/CustomButton/CustomButton.jsx';
 class Gateway extends Component {
     constructor(props) {
       super(props);
+      this.componentDidMount = this.componentDidMount.bind(this);
+
       this.state = {
-        _hasSharedLocation: false
+        _hasSharedLocation: false,
+        lat: null,
+        long: null,
+        city: null,
+        area: null,
+        web3: props.web3,
+        uvtToken: props.uvtToken,
+        uvtCore: props.uvtCore
       };
     }
+
     shareLocation() {
-      console.log("hi");
+      navigator.geolocation.getCurrentPosition(function(position) {
+        
+      });
+    }
+
+    componentDidMount() {
+      console.log(this.state);
     }
 
     render() {
