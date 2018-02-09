@@ -197,6 +197,35 @@ contract OpenDeviceRegistry is Ownable {
   }
 
   /**
+   * Returns the account's gateway information
+   *
+   */
+  function getMyGateway()
+    external
+    view
+    onlyGatewayOwner()
+    returns (
+      uint id,
+      string ip,
+      string lat,
+      string long,
+      string city,
+      string area,
+      string wirelessData
+    )
+  {
+    Gateway memory gateway = gateways[ownerToGatewayIds[msg.sender]];
+
+    id = ownerToGatewayIds[msg.sender];
+    ip = gateway.ip;
+    lat = gateway.lat;
+    long = gateway.long;
+    city = gateway.city;
+    area = gateway.area;
+    wirelessData = gateway.wirelessData;
+  }
+
+  /**
    * Returns all information for one gateway
    * Can only be called by the contract owner
    *

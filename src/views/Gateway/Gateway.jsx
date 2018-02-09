@@ -6,14 +6,33 @@ import {
 import {Card} from 'components/Card/Card.jsx';
 import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
 import Button from 'elements/CustomButton/CustomButton.jsx';
+import { ScaleLoader } from 'react-spinners';
+import MyGateway from 'views/Gateway/MyGateway.jsx';
+import Searches from 'views/Gateway/Searches.jsx';
+
+import Async from 'react-promise'
+import moize from 'moize';
+
+const ipObj = require("ip");
+
+const googleMapsClient = require('@google/maps').createClient({
+  key: 'AIzaSyAwj2Pbd4SdxIFMUQOREZu8T2iAK87hvdI',
+  Promise: Promise
+});
 
 class Gateway extends Component {
     constructor(props) {
       super(props);
       this.componentDidMount = this.componentDidMount.bind(this);
+      this.shareLocation = this.shareLocation.bind(this);
+      this.registerDevice = this.registerDevice.bind(this);
+      this.getAccountGateway = this.getAccountGateway.bind(this);
 
       this.state = {
         _hasSharedLocation: false,
+        _isLoading: false,
+        _isAdding: false,
+        ip: ipObj.address(),
         lat: null,
         long: null,
         city: null,
@@ -22,16 +41,83 @@ class Gateway extends Component {
         uvtToken: props.uvtToken,
         uvtCore: props.uvtCore
       };
-    }
 
-    shareLocation() {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        
-      });
+
     }
 
     componentDidMount() {
-      console.log(this.state);
+
+    }
+
+    getAccountGateway() {
+      var _this = this;
+      return new Promise(function(resolve, reject) {
+        _this.state.uvtCore.getMyGateway({from: _this.state.web3.eth.coinbase, gasLimit: 21000})
+        .then((res) => {
+          if (res[0] === "") {
+            reject(res);
+          } else {
+            var data = {
+              id: _this.state.web3.toDecimal(res[0]),
+              ip: res[1],
+              lat: res[2],
+              long: res[3],
+              city: res[4],
+              area: res[5],
+              wirelessData: res[6]
+            }
+            resolve(data);
+          }
+        })
+        .catch((err) => {
+          console.log("no gateway found");
+          reject(err); // they haven't registered device
+        });
+      });
+    }
+
+    shareLocation() {
+      this.setState({_isLoading: true});
+      var _this = this;
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var latlng = position.coords.latitude + "," + position.coords.longitude;
+        googleMapsClient.reverseGeocode({latlng: latlng, result_type: "street_address"}).asPromise()
+          .then((response) => {
+            var locality = response.json.results[0]["address_components"]
+              .filter(hash => hash["types"].includes("locality"));
+            var postalCode = response.json.results[0]["address_components"]
+              .filter(hash => hash["types"].includes("postal_code"));
+
+            _this.setState({
+              lat: position.coords.latitude,
+              long: position.coords.longitude,
+              city: locality[0]["long_name"],
+              area: postalCode[0]["long_name"],
+              _hasSharedLocation: true
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      });
+    }
+
+    registerDevice() {
+      this.setState({_isAdding: true});
+
+      this.state.uvtCore.addGateway(
+        this.state.ip,
+        this.state.lat.toString(),
+        this.state.long.toString(),
+        this.state.city,
+        this.state.area,
+        "",
+        {from: this.state.web3.eth.coinbase, gas: 256000}
+      ).then(function(txHash) {
+        console.log('Tx:' + txHash);
+      }).catch(function(error) {
+        console.log(error);
+      });
     }
 
     render() {
@@ -48,28 +134,28 @@ class Gateway extends Component {
                        label : "Latitude",
                        type : "text",
                        bsClass : "form-control",
-                       placeholder : "",
+                       defaultValue: this.state.lat,
                        disabled: true
                     },
                     {
                        label : "Longitude",
                        type : "text",
                        bsClass : "form-control",
-                       placeholder : "",
+                       defaultValue: this.state.long,
                        disabled: true
                     },
                     {
                        label : "City",
                        type : "text",
                        bsClass : "form-control",
-                       placeholder : "",
+                       defaultValue: this.state.city,
                        disabled: true
                     },
                     {
                        label : "Area",
                        type : "text",
                        bsClass : "form-control",
-                       placeholder : "",
+                       defaultValue: this.state.area,
                        disabled: true
                     }
                 ]}
@@ -84,8 +170,14 @@ class Gateway extends Component {
                 <Button
                     bsStyle="warning"
                     onClick={() => this.shareLocation()}
+                    disabled={this.state._isLoading}
                 >
-                    Share Location
+                    { this.state._isLoading? <ScaleLoader
+                        color={"#FF9500"}
+                        loading={this.state._isLoading}
+                        height={15}
+                        width={7}
+                    /> : "Share Location" }
                 </Button>
                 <div className="clearfix"></div>
                 <br/>
@@ -97,64 +189,90 @@ class Gateway extends Component {
         return (
             <div className="content">
                 <Grid fluid>
-                    <Row>
-                        <Col md={8}>
-                            <Card
-                                title="Register Device As Gateway"
-                                category="Register your device to be part of the UVT network and earn UVT tokens"
-                                content={
-                                    <form>
-                                        <FormInputs
-                                            ncols = {["col-md-12"]}
-                                            proprieties = {[
-                                                {
-                                                 label : "Public Address (Metamask)",
-                                                 type : "text",
-                                                 bsClass : "form-control",
-                                                 placeholder : "Address (Metamask)",
-                                                 defaultValue : "0x46AC3404a54B3Eaf8d3EA687a87EaC3BBfb1bd40",
-                                                 disabled : true
-                                                }
-                                            ]}
-                                        />
-                                        <FormInputs
-                                            ncols = {["col-md-6" , "col-md-6"]}
-                                            proprieties = {[
-                                                {
-                                                 label : "IP Address",
-                                                 type : "text",
-                                                 bsClass : "form-control",
-                                                 placeholder : "IP Address",
-                                                 defaultValue : "127.0.0.1",
-                                                 disabled: true
-                                                },
-                                                {
-                                                   label : "Wireless Data",
-                                                   type : "text",
-                                                   bsClass : "form-control",
-                                                   placeholder : "",
-                                                   disabled: true
-                                                }
-                                            ]}
-                                        />
+                    <Async
+                        promise={this.getAccountGateway()}
+                        then={(results) => {
+                            return (
+                              <Row>
+                                  <Col md={6}>
+                                      <MyGateway
+                                          address={this.state.web3.eth.coinbase}
+                                          data={results}
+                                      />
+                                  </Col>
+                                  <Col md={6}>
+                                      <Searches gatewayId={results.id} uvtCore={this.state.uvtCore} />
+                                  </Col>
+                              </Row>
+                            )
+                        }}
+                        catch={() => { // means they haven't registered a gateway with this account
+                          return (
+                              <Row>
+                                  <Col md={6}>
+                                      <Card
+                                          title="Register Device As Gateway"
+                                          category="Register your device to be part of the UVT network and earn UVT tokens"
+                                          content={
+                                              <form>
+                                                  <FormInputs
+                                                      ncols = {["col-md-12"]}
+                                                      proprieties = {[
+                                                          {
+                                                           label : "Metamask Account",
+                                                           type : "text",
+                                                           bsClass : "form-control",
+                                                           placeholder : "-- UNLOCK YOUR METAMASK ACCOUNT AND REFRESH--",
+                                                           defaultValue : this.state.web3.eth.coinbase,
+                                                           disabled : true
+                                                          }
+                                                      ]}
+                                                  />
+                                                  <FormInputs
+                                                      ncols = {["col-md-6" , "col-md-6"]}
+                                                      proprieties = {[
+                                                          {
+                                                           label : "IP Address",
+                                                           type : "text",
+                                                           bsClass : "form-control",
+                                                           placeholder : "IP Address",
+                                                           defaultValue : this.state.ip,
+                                                           disabled: true
+                                                          },
+                                                          {
+                                                             label : "Wireless Data",
+                                                             type : "text",
+                                                             bsClass : "form-control",
+                                                             placeholder : "",
+                                                             disabled: true
+                                                          }
+                                                      ]}
+                                                  />
 
-                                        { locationInfo }
+                                                  { locationInfo }
 
-                                        <Button
-                                            bsStyle="info"
-                                            pullRight
-                                            fill
-                                            type="submit"
-                                        >
-                                            Register
-                                        </Button>
-                                        <div className="clearfix"></div>
-                                    </form>
-                                }
-                            />
-                        </Col>
-
-                    </Row>
+                                                  <Button
+                                                      bsStyle="info"
+                                                      pullRight
+                                                      onClick={() => this.registerDevice()}
+                                                      disabled={this.state.web3.eth.coinbase === null || this.state.lat === null || this.state._isAdding}
+                                                  >
+                                                  { this.state._isAdding? <ScaleLoader
+                                                      color={"#1DC7EA"}
+                                                      loading={this.state._isAdding}
+                                                      height={15}
+                                                      width={7}
+                                                  /> : "Register Device" }
+                                                  </Button>
+                                                  <div className="clearfix"></div>
+                                              </form>
+                                          }
+                                      />
+                                  </Col>
+                              </Row>
+                          )
+                        }}
+                    />
                 </Grid>
             </div>
         );

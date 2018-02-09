@@ -1,13 +1,11 @@
 import contract from 'truffle-contract';
-
-import Web3 from 'web3';
 import getWeb3 from 'utils/getWeb3';
 
 import tokenArtifact from 'abis/UVTToken.json';
 import coreArtifact from 'abis/UVTCore.json';
 
-const UVTTOKEN_ADDRESS='0x8ac427b54c3ac7e28f970015366dee69d2e421d0';
-const UVTCORE_ADDRESS='0x01a38a4982d412f505357f42c516162a63ce24ec';
+const UVTTOKEN_ADDRESS='0x6096a16bf9f30f05ea2ae908be5aa46d79734683';
+const UVTCORE_ADDRESS='0xda9b5906ef23c2cf5dac3b16c41daa10c07c4e8f';
 
 let getContracts = new Promise(function(resolve, reject) {
   getWeb3
