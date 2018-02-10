@@ -7,22 +7,22 @@ import { ScaleLoader } from 'react-spinners';
 import Async from 'react-promise'
 
 import moize from 'moize'
-class WalletCard extends Component {
+class GatewayWalletCard extends Component {
 
     constructor(props) {
       super(props);
       this.getUVTBalance = this.getUVTBalance.bind(this);
-      this.buyTokens = this.buyTokens.bind(this);
+
       this.getInputAmount = this.getInputAmount.bind(this);
       this.addNotification = this.addNotification.bind(this);
-      this.listenForPurchases = this.listenForPurchases.bind(this);
+      this.listenForPayouts = this.listenForPayouts.bind(this);
 
       this.state = {
-        _isBuying: false,
+        _isSelling: false,
         balance: null
       };
 
-      this.listenForPurchases();
+      //this.listenForPayouts();
     }
 
     getUVTBalance() {
@@ -42,26 +42,7 @@ class WalletCard extends Component {
       });
     }
 
-    buyTokens() {
-      var amount = this.getInputAmount();
-      if (amount != "") {
-        this.setState({_isBuying: true});
-
-        this.props.uvtCore.buyUVT(
-          parseInt(amount),
-          {from: this.props.web3.eth.coinbase, gasLimit: 21000, value: parseInt(amount)})
-        .then((res) => {
-          ReactDOM.findDOMNode(this.inputAmount).value = "";
-          this.setState({_isBuying: false});
-        })
-        .catch((err) => {
-          console.log(err);
-          console.log("error buying tokens");
-        });
-      }
-    }
-
-    listenForPurchases() {
+    listenForPayouts() {
       var _this = this;
       this.props.uvtCore.PurchasedUVT({account: this.props.web3.eth.coinbase})
       .watch(function(error, event) {
@@ -145,7 +126,7 @@ class WalletCard extends Component {
                                           <form>
                                               <Col md={8}>
                                                   <FormGroup>
-                                                      <ControlLabel>Buy UVT Tokens</ControlLabel>
+                                                      <ControlLabel>Sell UVT Tokens</ControlLabel>
                                                       <FormControl
                                                         inputRef={node => {this.inputAmount = node;}}
                                                         type={"text"}
@@ -158,15 +139,15 @@ class WalletCard extends Component {
                                                   <br/>
                                                   <Button
                                                       bsStyle="info"
-                                                      disabled={this.state._isBuying}
+                                                      disabled={this.state._isSelling}
                                                       onClick={() => this.buyTokens()}
                                                   >
-                                                      { this.state._isBuying? <ScaleLoader
+                                                      { this.state._isSelling? <ScaleLoader
                                                           color={"#1DC7EA"}
-                                                          loading={this.state._isBuying}
+                                                          loading={this.state._isSelling}
                                                           height={16}
                                                           width={1}
-                                                      /> : "Buy" }
+                                                      /> : "Sell" }
                                                   </Button>
                                                   <div className="clearfix"></div>
                                               </Col>
@@ -190,4 +171,4 @@ class WalletCard extends Component {
     }
 }
 
-export default WalletCard;
+export default GatewayWalletCard;

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import {
     Grid, Row, Column
 } from 'react-cellblock';
@@ -9,15 +10,19 @@ import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
 import Button from 'elements/CustomButton/CustomButton.jsx';
 import MapCard from 'components/MapCard/MapCard.jsx';
 import WalletCard from 'components/WalletCard/WalletCard.jsx';
+import { ScaleLoader } from 'react-spinners';
+import moize from 'moize'
 
 class Client extends Component{
     constructor(props) {
       super(props);
       this.componentDidMount = this.componentDidMount.bind(this);
+      this.getGateways = this.getGateways.bind(this);
+
       this.state = {
-        web3: props.web3,
-        uvtToken: props.uvtToken,
-        uvtCore: props.uvtCore
+        _isFetchingGateways: false,
+        inputCity: "",
+        inputZip: ""
       };
     }
 
@@ -29,13 +34,24 @@ class Client extends Component{
 
     }
 
+    handleChange(event) {
+      this.setState({
+        [event.target.name]: event.target.value
+      })
+    }
+
     render() {
         return (
           <div className="content">
               <Grid fluid>
                   <Row>
                       <Column width="5/12">
-                          <WalletCard uvtToken={this.state.uvtToken} />
+                          <WalletCard
+                            uvtToken={this.props.uvtToken}
+                            uvtCore={this.props.uvtCore}
+                            web3={this.props.web3}
+                            notifications={this.props.notifications}
+                          />
 
                           <Card
                               title="Find gateways in your area"
@@ -48,16 +64,20 @@ class Client extends Component{
                                                 ncols = {["col-md-6", "col-md-6"]}
                                                 proprieties = {[
                                                     {
-                                                     label : "City",
-                                                     type : "text",
-                                                     bsClass : "form-control",
-                                                     placeholder : "Enter your city"
+                                                      name: "inputCity",
+                                                      label : "City",
+                                                      type : "text",
+                                                      bsClass : "form-control",
+                                                      onChange: this.handleChange.bind(this),
+                                                      placeholder : "Enter your city"
                                                     },
                                                     {
-                                                       label : "Zip Code",
-                                                       type : "text",
-                                                       bsClass : "form-control",
-                                                       placeholder : "Enter your zip code",
+                                                      name: "inputZip",
+                                                      label : "Zip Code",
+                                                      type : "number",
+                                                      bsClass : "form-control",
+                                                      onChange: this.handleChange.bind(this),
+                                                      placeholder : "Enter your zip code",
                                                     }
                                                 ]}
                                             />
@@ -67,8 +87,14 @@ class Client extends Component{
                                             <Button style={{ marginTop: "8px"}}
                                                 bsStyle="info"
                                                 onClick={() => this.getGateways()}
+                                                disabled={this.state.inputCity == "" || this.state.inputZip == ""}
                                             >
-                                              Find Gateways
+                                                { this.state._isFetchingGateways? <ScaleLoader
+                                                    color={"#1DC7EA"}
+                                                    loading={this.state._isFetchingGateways}
+                                                    height={16}
+                                                    width={1}
+                                                /> : "Find Gateways" }
                                             </Button>
                                             <div className="clearfix"></div>
                                         </Column>
@@ -78,7 +104,7 @@ class Client extends Component{
                           />
                       </Column>
                       <Column width="7/12">
-                          <MapCard searching={true} />
+                          <MapCard searching={false} />
                       </Column>
                   </Row>
               </Grid>

@@ -9,8 +9,6 @@ class Searches extends Component {
     this.listen = this.listen.bind(this);
 
     this.state = {
-      gatewayId: props.gatewayId,
-      uvtCore: props.uvtCore,
       events: [{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"}]
     };
   }
@@ -18,7 +16,7 @@ class Searches extends Component {
   getAll() {
     var _this = this;
     return new Promise(function(resolve, reject) {
-      this.state.uvtCore.InvokeGateway({id: this.state.gatewayId}, {fromBlock: 0, toBlock: "latest"})
+      this.props.uvtCore.InvokeGateway({id: this.props.gatewayId}, {fromBlock: 0, toBlock: "latest"})
       .get(function(error, logs) {
         console.log(logs);
         // this.setState({
@@ -29,7 +27,7 @@ class Searches extends Component {
   }
 
   listen() {
-    // this.state.uvtCore.InvokeGateway({id: this.state.gatewayId}, {fromBlock: 0, toBlock: "latest"})
+    // this.props.uvtCore.InvokeGateway({id: this.props.gatewayId}, {fromBlock: 0, toBlock: "latest"})
     // .watch(function(error, event) {
     //   this.setState({
     //

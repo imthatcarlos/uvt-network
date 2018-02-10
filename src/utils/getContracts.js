@@ -4,8 +4,8 @@ import getWeb3 from 'utils/getWeb3';
 import tokenArtifact from 'abis/UVTToken.json';
 import coreArtifact from 'abis/UVTCore.json';
 
-const UVTTOKEN_ADDRESS='0x6096a16bf9f30f05ea2ae908be5aa46d79734683';
-const UVTCORE_ADDRESS='0xda9b5906ef23c2cf5dac3b16c41daa10c07c4e8f';
+const UVTTOKEN_ADDRESS='0xe5909d3643c5647150235442961414c0628d4dc6';
+const UVTCORE_ADDRESS='0x529346e9b5d8f88db7cfa54e7024b472c62bb533';
 
 let getContracts = new Promise(function(resolve, reject) {
   getWeb3

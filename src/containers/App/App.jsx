@@ -24,6 +24,7 @@ class App extends Component {
         super(props);
         this.componentDidMount = this.componentDidMount.bind(this);
         this.handleNotificationClick = this.handleNotificationClick.bind(this);
+        this.metamaskError = this.metamaskError.bind(this);
         this.state = {
             _notificationSystem: null
         };
@@ -92,6 +93,19 @@ class App extends Component {
             autoDismiss: 15,
         });*/}
     }
+    metamaskError() {
+      this.state._notificationSystem.addNotification({
+          title: (<span data-notify="icon" className="pe-7s-gift"></span>),
+          message: (
+              <div>
+                  Error connecting to Metamask and Ethereum Smart Contracts
+              </div>
+          ),
+          level: 'error',
+          position: "tr",
+          autoDismiss: 10,
+      });
+    }
     componentDidUpdate(e){
         if(window.innerWidth < 993 && e.history.location.pathname !== e.location.pathname && document.documentElement.className.indexOf('nav-open') !== -1){
             document.documentElement.classList.toggle('nav-open');
@@ -107,7 +121,10 @@ class App extends Component {
                         <Header {...this.props}/>
                             <Async
                                 promise={getContracts}
-                                catch={(error) => {return<div>Error getting Metamask and contracts</div>}}
+                                catch={(error) => {
+                                  this.metamaskError();
+                                  return<div>Error getting Metamask and contracts</div>
+                                }}
                                 pending={
                                     <div style={style}>
                                       <ScaleLoader
@@ -142,6 +159,7 @@ class App extends Component {
                                                         web3={results.web3}
                                                         uvtToken={results.uvtToken}
                                                         uvtCore={results.uvtCore}
+                                                        notifications={this.refs.notificationSystem}
                                                     />
                                                 )}/>
                                             );

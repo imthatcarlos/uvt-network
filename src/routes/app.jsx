@@ -1,14 +1,13 @@
-import Dashboard from 'views/Dashboard/Dashboard';
 import Gateway from 'views/Gateway/Gateway';
-import TableList from 'views/TableList/TableList';
+import Registry from 'views/Registry/Registry';
 import Client from 'views/Client/Client';
-import Notifications from 'views/Notifications/Notifications';
 
 
 const appRoutes = [
-    { path: "/client", name: "UVT Client", icon: "pe-7s-map-2", component: Client },
+    { path: "/client", name: "UVT Client", icon: "pe-7s-global", component: Client },
     { path: "/gateway", name: "UVT Gateway", icon: "pe-7s-signal", component: Gateway },
-    { path: "/odr", name: "Open Device Registry", icon: "pe-7s-news-paper", component: TableList },
+    { path: "/odr", name: "Open Device Registry", icon: "pe-7s-news-paper", component: Registry },
+    { path: "/transactions", name: "Transactions", icon: "pe-7s-gleam", component: Registry },
     { redirect: true, path:"/", to:"/client", name: "Client" }
 ];
 

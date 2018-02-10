@@ -1,15 +1,17 @@
 import React, { Component } from 'react';
 import {
-    Grid, Row, Col
-} from 'react-bootstrap';
+    Grid, Row, Column
+} from 'react-cellblock';
 
 import {Card} from 'components/Card/Card.jsx';
 import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
 import Button from 'elements/CustomButton/CustomButton.jsx';
-import { ScaleLoader } from 'react-spinners';
-import MyGateway from 'views/Gateway/MyGateway.jsx';
-import Searches from 'views/Gateway/Searches.jsx';
 
+import MyGateway from 'components/Gateway/MyGateway.jsx';
+import Searches from 'components/Gateway/Searches.jsx';
+import GatewayWalletCard from 'components/Gateway/GatewayWalletCard.jsx'
+
+import { ScaleLoader } from 'react-spinners';
 import Async from 'react-promise'
 import moize from 'moize';
 
@@ -36,10 +38,7 @@ class Gateway extends Component {
         lat: null,
         long: null,
         city: null,
-        area: null,
-        web3: props.web3,
-        uvtToken: props.uvtToken,
-        uvtCore: props.uvtCore
+        area: null
       };
 
 
@@ -52,13 +51,13 @@ class Gateway extends Component {
     getAccountGateway() {
       var _this = this;
       return new Promise(function(resolve, reject) {
-        _this.state.uvtCore.getMyGateway({from: _this.state.web3.eth.coinbase, gasLimit: 21000})
+        _this.props.uvtCore.getMyGateway({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
         .then((res) => {
           if (res[0] === "") {
             reject(res);
           } else {
             var data = {
-              id: _this.state.web3.toDecimal(res[0]),
+              id: _this.props.web3.toDecimal(res[0]),
               ip: res[1],
               lat: res[2],
               long: res[3],
@@ -105,14 +104,14 @@ class Gateway extends Component {
     registerDevice() {
       this.setState({_isAdding: true});
 
-      this.state.uvtCore.addGateway(
+      this.props.uvtCore.addGateway(
         this.state.ip,
         this.state.lat.toString(),
         this.state.long.toString(),
         this.state.city,
         this.state.area,
         "",
-        {from: this.state.web3.eth.coinbase, gas: 256000}
+        {from: this.props.web3.eth.coinbase, gas: 256000}
       ).then(function(txHash) {
         console.log('Tx:' + txHash);
       }).catch(function(error) {
@@ -165,8 +164,7 @@ class Gateway extends Component {
         else {
           locationInfo = (
             <Row>
-              <Col md={5}></Col>
-              <Col md={4}>
+              <Column width="1/3" offset="1/3">
                 <Button
                     bsStyle="warning"
                     onClick={() => this.shareLocation()}
@@ -181,7 +179,7 @@ class Gateway extends Component {
                 </Button>
                 <div className="clearfix"></div>
                 <br/>
-              </Col>
+              </Column>
             </Row>
           );
         }
@@ -194,22 +192,36 @@ class Gateway extends Component {
                         then={(results) => {
                             return (
                               <Row>
-                                  <Col md={6}>
-                                      <MyGateway
-                                          address={this.state.web3.eth.coinbase}
-                                          data={results}
-                                      />
-                                  </Col>
-                                  <Col md={6}>
-                                      <Searches gatewayId={results.id} uvtCore={this.state.uvtCore} />
-                                  </Col>
+                                  <Column width="6/12">
+                                      <Row>
+                                          <Column>
+                                              <GatewayWalletCard
+                                                  uvtToken={this.props.uvtToken}
+                                                  uvtCore={this.props.uvtCore}
+                                                  web3={this.props.web3}
+                                                  notifications={this.props.notifications}
+                                              />
+                                          </Column>
+                                      </Row>
+                                      <Row>
+                                          <Column>
+                                              <MyGateway
+                                                  address={this.props.web3.eth.coinbase}
+                                                  data={results}
+                                              />
+                                          </Column>
+                                      </Row>
+                                  </Column>
+                                  <Column width="6/12">
+                                      <Searches gatewayId={results.id} uvtCore={this.props.uvtCore} />
+                                  </Column>
                               </Row>
                             )
                         }}
                         catch={() => { // means they haven't registered a gateway with this account
                           return (
                               <Row>
-                                  <Col md={6}>
+                                  <Column width="6/12">
                                       <Card
                                           title="Register Device As Gateway"
                                           category="Register your device to be part of the UVT network and earn UVT tokens"
@@ -223,7 +235,7 @@ class Gateway extends Component {
                                                            type : "text",
                                                            bsClass : "form-control",
                                                            placeholder : "-- UNLOCK YOUR METAMASK ACCOUNT AND REFRESH--",
-                                                           defaultValue : this.state.web3.eth.coinbase,
+                                                           defaultValue : this.props.web3.eth.coinbase,
                                                            disabled : true
                                                           }
                                                       ]}
@@ -255,12 +267,12 @@ class Gateway extends Component {
                                                       bsStyle="info"
                                                       pullRight
                                                       onClick={() => this.registerDevice()}
-                                                      disabled={this.state.web3.eth.coinbase === null || this.state.lat === null || this.state._isAdding}
+                                                      disabled={this.props.web3.eth.coinbase === null || this.state.lat === null || this.state._isAdding}
                                                   >
                                                   { this.state._isAdding? <ScaleLoader
                                                       color={"#1DC7EA"}
                                                       loading={this.state._isAdding}
-                                                      height={15}
+                                                      height={16}
                                                       width={7}
                                                   /> : "Register Device" }
                                                   </Button>
@@ -268,7 +280,7 @@ class Gateway extends Component {
                                               </form>
                                           }
                                       />
-                                  </Col>
+                                  </Column>
                               </Row>
                           )
                         }}
