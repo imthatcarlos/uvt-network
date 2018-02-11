@@ -1,11 +1,16 @@
 import contract from 'truffle-contract';
 import getWeb3 from 'utils/getWeb3';
 
-import tokenArtifact from 'abis/UVTToken.json';
-import coreArtifact from 'abis/UVTCore.json';
+import tokenArtifact from './../json/UVTToken.json';
+import coreArtifact from './../json/UVTCore.json';
 
-const UVTTOKEN_ADDRESS='0xe5909d3643c5647150235442961414c0628d4dc6';
-const UVTCORE_ADDRESS='0x529346e9b5d8f88db7cfa54e7024b472c62bb533';
+var fs = require("fs");
+var path = require("path");
+var filePath = path.join(__dirname, "../../json/addresses.json");
+var json = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+const UVTTOKEN_ADDRESS = json["contracts"]["development"]["UVTToken"];
+const UVTCORE_ADDRESS  = json["contracts"]["development"]["UVTCore"];
 
 let getContracts = new Promise(function(resolve, reject) {
   getWeb3
