@@ -33,8 +33,8 @@ contract OpenDeviceRegistry is Ownable {
     string long;
     string city;
     string area;
-    string wirelessData;
     uint areaIndex;
+    string physicalAddressAndNumber;
   }
 
   struct InvokableGateway {
@@ -80,7 +80,8 @@ contract OpenDeviceRegistry is Ownable {
    * @param area         The geo area of the gateway NOTE: This could be
                          postal code if following Google Maps API, otherwise
    *                     some other local geo filter.
-   * @param wirelessData Extra wireless data about the gateway
+   * @param physicalAddressAndNumber Concatenated address and phone number,
+                                     delimited by '+'
    */
   function addGateway(
       string ip,
@@ -88,7 +89,7 @@ contract OpenDeviceRegistry is Ownable {
       string long,
       string city,
       string area,
-      string wirelessData
+      string physicalAddressAndNumber
   )
     external
   {
@@ -105,7 +106,7 @@ contract OpenDeviceRegistry is Ownable {
       long: long,
       city: city,
       area: area,
-      wirelessData: wirelessData,
+      physicalAddressAndNumber: physicalAddressAndNumber,
       areaIndex: 0
     });
 
@@ -203,7 +204,7 @@ contract OpenDeviceRegistry is Ownable {
   function getMyGateway()
     external
     view
-    onlyGatewayOwner()
+    onlyGatewayOwner
     returns (
       uint id,
       string ip,
@@ -211,7 +212,7 @@ contract OpenDeviceRegistry is Ownable {
       string long,
       string city,
       string area,
-      string wirelessData
+      string physicalAddressAndNumber
     )
   {
     Gateway memory gateway = gateways[ownerToGatewayIds[msg.sender]];
@@ -222,7 +223,7 @@ contract OpenDeviceRegistry is Ownable {
     long = gateway.long;
     city = gateway.city;
     area = gateway.area;
-    wirelessData = gateway.wirelessData;
+    physicalAddressAndNumber = gateway.physicalAddressAndNumber;
   }
 
   /**
@@ -243,7 +244,7 @@ contract OpenDeviceRegistry is Ownable {
       string long,
       string city,
       string area,
-      string wirelessData
+      string physicalAddressAndNumber
     )
   {
     Gateway memory gateway = gateways[id];
@@ -254,7 +255,7 @@ contract OpenDeviceRegistry is Ownable {
     long = gateway.long;
     city = gateway.city;
     area = gateway.area;
-    wirelessData = gateway.wirelessData;
+    physicalAddressAndNumber = gateway.physicalAddressAndNumber;
   }
 
   /**

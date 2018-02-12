@@ -8,7 +8,7 @@ module.exports = async function addValidGateway (ledger, account, area = '60641'
     '-87.629798',
     'chicago',
     area,
-    '',
+    '123+W+Blah+Street+Chicago+IL+60641+11234567890',
     {from: account}
   );
 }
