@@ -308,6 +308,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     onlyRequestOwner
     returns (bytes32 id)
   {
+
     return accountToRequestIds[msg.sender];
   }
 
@@ -348,7 +349,16 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     onlyRequestOwner
     returns (SearchState state)
   {
-    return searchRequests[accountToRequestIds[msg.sender]].state;
+    bytes32 id = accountToRequestIds[msg.sender];
+
+    if (
+      searchRequests[id].state == SearchState.Searching
+      && searchRequests[id].expires < now
+    ) {
+      return SearchState.Expired;
+    }
+
+    return searchRequests[id].state;
   }
 
   /**
