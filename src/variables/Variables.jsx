@@ -4,7 +4,7 @@
 // // // For notifications
 // //
 //
-var defaultWidth = window.screen.width > 768 ? window.screen.width*1/3: window.screen.width;
+var defaultWidth = window.screen.width > 768 ? window.screen.width*1/5: window.screen.width;
 
 var style = {
     Wrapper: {},

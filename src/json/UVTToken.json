@@ -393,7 +393,7 @@
       "absolutePath": "/Users/carlos/Documents/github/uvt-network/contracts/UVTToken.sol",
       "exportedSymbols": {
         "UVTToken": [
-          1813
+          1836
         ]
       }
     },
@@ -407,49 +407,49 @@
             ".18"
           ]
         },
-        "id": 1800,
+        "id": 1823,
         "name": "PragmaDirective",
         "src": "0:24:4"
       },
       {
         "attributes": {
-          "SourceUnit": 2221,
+          "SourceUnit": 2244,
           "absolutePath": "/Users/carlos/Documents/github/uvt-network/node_modules/zeppelin-solidity/contracts/token/MintableToken.sol",
           "file": "../node_modules/zeppelin-solidity/contracts/token/MintableToken.sol",
-          "scope": 1814,
+          "scope": 1837,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 1801,
+        "id": 1824,
         "name": "ImportDirective",
         "src": "26:77:4"
       },
       {
         "attributes": {
           "contractDependencies": [
-            1967,
-            2053,
-            2096,
-            2125,
-            2220,
-            2466
+            1990,
+            2076,
+            2119,
+            2148,
+            2243,
+            2489
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            1813,
-            2220,
-            1967,
-            2466,
-            2053,
-            2096,
-            2125
+            1836,
+            2243,
+            1990,
+            2489,
+            2076,
+            2119,
+            2148
           ],
           "name": "UVTToken",
-          "scope": 1814
+          "scope": 1837
         },
         "children": [
           {
@@ -463,15 +463,15 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "MintableToken",
-                  "referencedDeclaration": 2220,
+                  "referencedDeclaration": 2243,
                   "type": "contract MintableToken"
                 },
-                "id": 1802,
+                "id": 1825,
                 "name": "UserDefinedTypeName",
                 "src": "188:13:4"
               }
             ],
-            "id": 1803,
+            "id": 1826,
             "name": "InheritanceSpecifier",
             "src": "188:13:4"
           },
@@ -479,7 +479,7 @@
             "attributes": {
               "constant": false,
               "name": "name",
-              "scope": 1813,
+              "scope": 1836,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "string storage ref",
@@ -491,7 +491,7 @@
                   "name": "string",
                   "type": "string storage pointer"
                 },
-                "id": 1804,
+                "id": 1827,
                 "name": "ElementaryTypeName",
                 "src": "206:6:4"
               },
@@ -508,12 +508,12 @@
                   "type": "literal_string \"Universal Visibility Token\"",
                   "value": "Universal Visibility Token"
                 },
-                "id": 1805,
+                "id": 1828,
                 "name": "Literal",
                 "src": "227:28:4"
               }
             ],
-            "id": 1806,
+            "id": 1829,
             "name": "VariableDeclaration",
             "src": "206:49:4"
           },
@@ -521,7 +521,7 @@
             "attributes": {
               "constant": false,
               "name": "symbol",
-              "scope": 1813,
+              "scope": 1836,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "string storage ref",
@@ -533,7 +533,7 @@
                   "name": "string",
                   "type": "string storage pointer"
                 },
-                "id": 1807,
+                "id": 1830,
                 "name": "ElementaryTypeName",
                 "src": "259:6:4"
               },
@@ -550,12 +550,12 @@
                   "type": "literal_string \"UVT\"",
                   "value": "UVT"
                 },
-                "id": 1808,
+                "id": 1831,
                 "name": "Literal",
                 "src": "282:5:4"
               }
             ],
-            "id": 1809,
+            "id": 1832,
             "name": "VariableDeclaration",
             "src": "259:28:4"
           },
@@ -563,7 +563,7 @@
             "attributes": {
               "constant": false,
               "name": "decimals",
-              "scope": 1813,
+              "scope": 1836,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "uint8",
@@ -575,7 +575,7 @@
                   "name": "uint8",
                   "type": "uint8"
                 },
-                "id": 1810,
+                "id": 1833,
                 "name": "ElementaryTypeName",
                 "src": "291:5:4"
               },
@@ -592,22 +592,22 @@
                   "type": "int_const 18",
                   "value": "18"
                 },
-                "id": 1811,
+                "id": 1834,
                 "name": "Literal",
                 "src": "315:2:4"
               }
             ],
-            "id": 1812,
+            "id": 1835,
             "name": "VariableDeclaration",
             "src": "291:26:4"
           }
         ],
-        "id": 1813,
+        "id": 1836,
         "name": "ContractDefinition",
         "src": "167:153:4"
       }
     ],
-    "id": 1814,
+    "id": 1837,
     "name": "SourceUnit",
     "src": "0:321:4"
   },
@@ -616,12 +616,12 @@
     "version": "0.4.18+commit.9cf6e910.Emscripten.clang"
   },
   "networks": {
-    "1518053433114": {
+    "1518498318926": {
       "events": {},
       "links": {},
-      "address": "0x6096a16bf9f30f05ea2ae908be5aa46d79734683"
+      "address": "0xebae740f377f6217cefabda1b466f7e146fee86a"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-09T02:28:59.067Z"
+  "updatedAt": "2018-02-13T05:09:03.559Z"
 }

@@ -6,6 +6,9 @@ import Async from 'react-promise'
 class MyGateway extends Component {
   constructor(props) {
     super(props);
+    var data = props.data.addressAndPhone.split("/");
+    var streetAddress = data[0].split("+").join(" ");
+    var addressLine2 = data[1].split("+").join(" ");
 
     this.state = {
       address: props.address,
@@ -14,7 +17,9 @@ class MyGateway extends Component {
       long: props.data.long,
       city: props.data.city,
       area: props.data.area,
-      wirelessData: props.data.wirelessData
+      streetAddress: streetAddress,
+      addressLine2: addressLine2,
+      phoneNumber: data[2]
     };
   }
   render() {
@@ -24,39 +29,26 @@ class MyGateway extends Component {
               title="My Gateway"
               category="Registed on the UVT Network"
               content={
-                  <div className="content">
+                  <div>
                       <form>
                           <FormInputs
-                              ncols = {["col-md-12"]}
+                              ncols = {["col-md-8", "col-md-4"]}
                               proprieties = {[
-                                  {
-                                   label : "Owner Address",
+                                 {
+                                   label : "Gateway Wallet Address",
                                    type : "text",
                                    bsClass : "form-control",
-                                   placeholder : "-- UNLOCK YOUR METAMASK ACCOUNT --",
                                    defaultValue : this.state.address,
                                    disabled : true
-                                  }
-                              ]}
-                          />
-                          <FormInputs
-                              ncols = {["col-md-6" , "col-md-6"]}
-                              proprieties = {[
-                                  {
-                                   label : "IP Address",
-                                   type : "text",
-                                   bsClass : "form-control",
-                                   placeholder : "IP Address",
-                                   defaultValue : this.state.ip,
-                                   disabled: true
-                                  },
-                                  {
-                                     label : "Wireless Data",
-                                     type : "text",
-                                     bsClass : "form-control",
-                                     placeholder : "",
-                                     disabled: true
-                                  }
+                                 },
+                                 {
+                                  label : "IP Address",
+                                  type : "text",
+                                  bsClass : "form-control",
+                                  placeholder : "IP Address",
+                                  defaultValue : this.state.ip,
+                                  disabled: true
+                                 }
                               ]}
                           />
 
@@ -93,7 +85,43 @@ class MyGateway extends Component {
                                   }
                               ]}
                           />
+
+                          <FormInputs
+                              ncols = {["col-md-5" , "col-md-4", "col-md-3"]}
+                              proprieties = {[
+                                  {
+                                     label : "Street Address",
+                                     name: "streetAddress",
+                                     type : "text",
+                                     bsClass : "form-control",
+                                     defaultValue: this.state.streetAddress,
+                                     disabled: true
+                                  },
+                                  {
+                                     label : "City, State Zip",
+                                     name: "addressLine2",
+                                     type : "text",
+                                     bsClass : "form-control",
+                                     defaultValue: this.state.addressLine2,
+                                     disabled: true
+                                  },
+                                  {
+                                     label : "Phone Number",
+                                     name: "phoneNumber",
+                                     type : "text",
+                                     bsClass : "form-control",
+                                     defaultValue: this.state.phoneNumber,
+                                     disabled: true
+                                  }
+                              ]}
+                          />
                       </form>
+                      <div className="footer">
+                          <hr />
+                          <div className="stats">
+                              <i className="pe-7s-refresh-cloud"></i>  Dynamic IP Updated: 5 days ago
+                          </div>
+                      </div>
                   </div>
               }
           />

@@ -1,113 +1,85 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
-import {
-    Grid, Row, Column
-} from 'react-cellblock';
 
-import {Map, Marker, GoogleApiWrapper} from 'google-maps-react';
-import {Card} from 'components/Card/Card.jsx';
-import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
-import Button from 'elements/CustomButton/CustomButton.jsx';
-import MapCard from 'components/MapCard/MapCard.jsx';
-import WalletCard from 'components/WalletCard/WalletCard.jsx';
-import { ScaleLoader } from 'react-spinners';
-import moize from 'moize'
+import NewSearch from 'components/Client/NewSearch.jsx';
+import CurrentSearch from 'components/Client/CurrentSearch.jsx';
 
-class Client extends Component{
+import Async from 'react-promise';
+
+class Client extends Component {
     constructor(props) {
       super(props);
-      this.componentDidMount = this.componentDidMount.bind(this);
-      this.getGateways = this.getGateways.bind(this);
+
+      this.getCurrentRequest = this.getCurrentRequest.bind(this);
+      this.onNewRequest = this.onNewRequest.bind(this);
 
       this.state = {
-        _isFetchingGateways: false,
-        inputCity: "",
-        inputZip: ""
-      };
+        requestData: []
+      }
     }
 
-    getGateways() {
+    getCurrentRequest() {
+      var _this = this;
+      return new Promise(function(resolve, reject) {
+        _this.props.uvtCore.getSearchRequest()
+        .then((results) => {
+          var ids = results[2].map((id) => { return _this.props.web3.toDecimal(id) });
+          var data = {
+            endpointId: results[1],
+            invokedGatewayIds: ids,
+            channelId: _this.props.web3.toDecimal(results[3]),
+            state: _this.props.web3.toDecimal(results[4]),
+            expires: _this.props.web3.toDecimal(results[5])
+          };
 
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+      });
     }
 
-    componentDidMount() {
-
+    onNewRequest() {
+      this.setState({requestData:[]});
     }
 
-    handleChange(event) {
-      this.setState({
-        [event.target.name]: event.target.value
-      })
+    addNotification(message, level = "success") {
+      this.props.notifications.addNotification({
+          title: (<span data-notify="icon" className="pe-7s-bell"></span>),
+          message: (
+              <div>
+                  {message}
+              </div>
+          ),
+          level: level,
+          position: "tr",
+          autoDismiss: 5,
+      });
     }
 
     render() {
+        var content;
+        if (this.state.requestData.length > 0) {
+          content = <CurrentSearch {...this.props} data={this.state.requestData} />
+        } else {
+          content = <Async
+              promise={this.getCurrentRequest()}
+              then={(results) => {
+                return (
+                  <CurrentSearch {...this.props} data={results} addNotification={this.addNotification} />
+                )
+              }}
+              catch={() => {
+                return (
+                  <NewSearch {...this.props} onNewRequest={this.onNewRequest} addNotification={this.addNotification}/>
+                )
+              }}
+          />
+        }
+
         return (
           <div className="content">
-              <Grid fluid>
-                  <Row>
-                      <Column width="5/12">
-                          <WalletCard
-                            uvtToken={this.props.uvtToken}
-                            uvtCore={this.props.uvtCore}
-                            web3={this.props.web3}
-                            notifications={this.props.notifications}
-                          />
-
-                          <Card
-                              title="Find gateways in your area"
-                              category="View gateways within your city and zip code"
-                              content={
-                                <Row>
-                                    <form>
-                                        <Column width="2/3">
-                                            <FormInputs
-                                                ncols = {["col-md-6", "col-md-6"]}
-                                                proprieties = {[
-                                                    {
-                                                      name: "inputCity",
-                                                      label : "City",
-                                                      type : "text",
-                                                      bsClass : "form-control",
-                                                      onChange: this.handleChange.bind(this),
-                                                      placeholder : "Enter your city"
-                                                    },
-                                                    {
-                                                      name: "inputZip",
-                                                      label : "Zip Code",
-                                                      type : "number",
-                                                      bsClass : "form-control",
-                                                      onChange: this.handleChange.bind(this),
-                                                      placeholder : "Enter your zip code",
-                                                    }
-                                                ]}
-                                            />
-                                        </Column>
-                                        <Column width="1/3">
-                                            <br/>
-                                            <Button style={{ marginTop: "8px"}}
-                                                bsStyle="info"
-                                                onClick={() => this.getGateways()}
-                                                disabled={this.state.inputCity == "" || this.state.inputZip == ""}
-                                            >
-                                                { this.state._isFetchingGateways? <ScaleLoader
-                                                    color={"#1DC7EA"}
-                                                    loading={this.state._isFetchingGateways}
-                                                    height={16}
-                                                    width={1}
-                                                /> : "Find Gateways" }
-                                            </Button>
-                                            <div className="clearfix"></div>
-                                        </Column>
-                                      </form>
-                                  </Row>
-                              }
-                          />
-                      </Column>
-                      <Column width="7/12">
-                          <MapCard searching={false} />
-                      </Column>
-                  </Row>
-              </Grid>
+              {content}
           </div>
         );
     }

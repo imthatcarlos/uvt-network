@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Grid, Row, Col } from 'react-bootstrap';
+import { Grid, Row, Col, Table } from 'react-bootstrap';
 import Button from 'elements/CustomButton/CustomButton.jsx';
 import { FormGroup, ControlLabel, FormControl } from 'react-bootstrap';
 import { ScaleLoader } from 'react-spinners';
@@ -16,13 +16,18 @@ class WalletCard extends Component {
       this.getInputAmount = this.getInputAmount.bind(this);
       this.addNotification = this.addNotification.bind(this);
       this.listenForPurchases = this.listenForPurchases.bind(this);
+      this.componentWillUnmount = this.componentWillUnmount.bind(this);
 
       this.state = {
         _isBuying: false,
         balance: null
       };
 
-      this.listenForPurchases();
+      //this.listenForPurchases();
+    }
+
+    componentWillUnmount() {
+      this.props.uvtCore.PurchasedUVT().stopWatching();
     }
 
     getUVTBalance() {
@@ -32,6 +37,7 @@ class WalletCard extends Component {
         .then((res) => {
           var b = res.toNumber()
           _this.setState({ balance: b });
+          _this.props.onGetBalance(b);
           resolve(b);
         })
         .catch((err) => {
@@ -51,8 +57,9 @@ class WalletCard extends Component {
           parseInt(amount),
           {from: this.props.web3.eth.coinbase, gasLimit: 21000, value: parseInt(amount)})
         .then((res) => {
+          this.addNotification("Purchase successful!", "success");
           ReactDOM.findDOMNode(this.inputAmount).value = "";
-          this.setState({_isBuying: false});
+          this.setState({_isBuying: false, balance: null});
         })
         .catch((err) => {
           console.log(err);
@@ -65,7 +72,8 @@ class WalletCard extends Component {
       var _this = this;
       this.props.uvtCore.PurchasedUVT({account: this.props.web3.eth.coinbase})
       .watch(function(error, event) {
-        // trigger getting new balance
+        // // trigger getting new balance
+        // _this.addNotification("Purchase successful!", "success");
         _this.setState({ balance: null });
       });
     }
@@ -76,7 +84,7 @@ class WalletCard extends Component {
 
     addNotification(message, level = "success") {
       this.props.notifications.addNotification({
-          title: (<span data-notify="icon" className="pe-7s-gift"></span>),
+          title: (<span data-notify="icon" className="pe-7s-bell"></span>),
           message: (
               <div>
                   {message}
@@ -173,12 +181,12 @@ class WalletCard extends Component {
                                             </form>
                                       </Col>
                                   </Row>
-                                  {/*<div className="footer">
+                                  <div className="footer">
                                       <hr />
                                       <div className="stats">
-
+                                          <i className="fa fa-refresh"></i> Updated just now
                                       </div>
-                                  </div>*/}
+                                  </div>
                               </div>
                           </div>
                         </Col>

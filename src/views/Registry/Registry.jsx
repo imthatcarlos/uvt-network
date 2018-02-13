@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 import { Grid, Row, Col, Table } from 'react-bootstrap';
 
 import Card from 'components/Card/Card.jsx';
-import {thArray, tdArray} from 'variables/Variables.jsx';
 
 import Async from 'react-promise'
-import { ScaleLoader } from 'react-spinners';
 
 class Registry extends Component {
 
@@ -24,7 +22,7 @@ class Registry extends Component {
       return new Promise(function(resolve, reject) {
         _this.props.uvtCore.getGatewaysCount()
         .then((res) => {
-          if (res.toNumber() == 0) { reject(res); }
+          if (res.toNumber() === 0) { reject(res); }
 
           // TODO: account for when contracts's storage array has gaps
           var arr = [...Array(res.toNumber()).keys()].map((idx) => {
@@ -65,13 +63,12 @@ class Registry extends Component {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
-                                                <th>Owner Address</th>
+                                                <th>Gateway Wallet Address</th>
                                                 <th>IP Address</th>
                                                 <th>Latitude</th>
                                                 <th>Longitude</th>
-                                                <th>City</th>
-                                                <th>Zip Code</th>
-                                                <th>Wireless Data</th>
+                                                <th>Full Address</th>
+                                                <th>Phone</th>
                                             </tr>
                                         </thead>
 
@@ -86,6 +83,8 @@ class Registry extends Component {
                                                     <tbody>
                                                       {
                                                         results.map((data, idx) => {
+                                                          var userData = data[6].split("/");
+                                                          var streetAddress = (userData[0] + "+" + userData[1]).split("+").join(" ");
                                                           return (
                                                             <tr key={idx}>
                                                               <td>{idx}</td>
@@ -93,9 +92,8 @@ class Registry extends Component {
                                                               <td>{data[1]}</td>
                                                               <td>{data[2]}</td>
                                                               <td>{data[3]}</td>
-                                                              <td>{data[4]}</td>
-                                                              <td>{data[5]}</td>
-                                                              <td>{data[6]}</td>
+                                                              <td>{streetAddress}</td>
+                                                              <td>{userData[2]}</td>
                                                             </tr>
                                                           )
                                                         })

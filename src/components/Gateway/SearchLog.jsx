@@ -2,14 +2,14 @@ import React, { Component } from 'react';
 import { Table } from 'react-bootstrap';
 import Card from 'components/Card/Card.jsx';
 
-class Searches extends Component {
+class SearchLog extends Component {
   constructor(props) {
     super(props);
     this.getAll = this.getAll.bind(this);
     this.listen = this.listen.bind(this);
 
     this.state = {
-      events: [{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},{endpointId: 123, result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"}]
+      events: [{endpointId: "c81c...", result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},{endpointId: "05f9...", result: 'FOUND', payout: 10, date: "Mon, May 3rd 2:14pm"},{endpointId: "e7cc...", result: 'NONE', payout: 0, date: "Mon, May 3rd 9:01pm"}]
     };
   }
 
@@ -49,23 +49,25 @@ class Searches extends Component {
 
     return (
       <Card
-          title="Searches"
+          title="Search Log"
           category="Network participants may invoke your device to initiate a search"
           content={
-            <div className="table-full-width">
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Result</th>
-                            <th>Payout</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        { searches }
-                    </tbody>
-                    {/* <Aysnc /> */}
-                </table>
+            <div className="content">
+              <div className="table-full-width">
+                  <table className="table">
+                      <thead>
+                          <tr>
+                              <th>Date</th>
+                              <th>Result</th>
+                              <th>Payment Received</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          { searches }
+                      </tbody>
+                      {/* <Aysnc /> */}
+                  </table>
+              </div>
             </div>
           }
       />
@@ -73,4 +75,4 @@ class Searches extends Component {
   }
 }
 
-export default Searches
+export default SearchLog

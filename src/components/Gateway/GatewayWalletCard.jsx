@@ -154,12 +154,12 @@ class GatewayWalletCard extends Component {
                                             </form>
                                       </Col>
                                   </Row>
-                                  {/*<div className="footer">
+                                  <div className="footer">
                                       <hr />
                                       <div className="stats">
-
+                                          <i className="fa fa-refresh"></i> Updated just now
                                       </div>
-                                  </div>*/}
+                                  </div>
                               </div>
                           </div>
                         </Col>

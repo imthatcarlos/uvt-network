@@ -11,12 +11,12 @@
 const Web3 = require('web3');
 const contract = require('truffle-contract');
 
-const tokenArtifact = require('./../json/UVTToken.json');
-const coreArtifact  = require('./../json/UVTCore.json');
+const tokenArtifact = require('./../src/json/UVTToken.json');
+const coreArtifact  = require('./../src/json/UVTCore.json');
 
 var fs = require("fs");
 var path = require("path");
-var filePath = path.join(__dirname, "../json/addresses.json");
+var filePath = path.join(__dirname, "../src/json/addresses.json");
 var json = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
 const UVTTOKEN_ADDRESS = json["contracts"]["development"]["UVTToken"];
@@ -25,11 +25,11 @@ const UVTCORE_ADDRESS  = json["contracts"]["development"]["UVTCore"];
 const UVT_MINT_AMOUNT = 10000;
 // to be created by eth accounts 4..8
 const SEED_GATEWAY_DATA = [
-  ["127.0.0.3", "37.5566867", "-122.3291684", "San Mateo", "94402", ""],
-  ["127.0.0.4", "37.5566797", "-122.3251684", "San Mateo", "94402", ""],
-  ["127.0.0.5", "37.5566707", "-122.3203706", "San Mateo", "94402", ""],
-  ["127.0.0.6", "41.9367710", "-87.737053", "Chicago", "60641", ""],
-  ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", ""]
+  ["127.0.0.3", "37.5566867", "-122.3291684", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
+  ["127.0.0.4", "37.5566797", "-122.3251684", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
+  ["127.0.0.5", "37.5566707", "-122.3203706", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
+  ["127.0.0.6", "41.9367710", "-87.737053", "Chicago", "60641", "4159+W+Addison+St+Chicago,+IL+60641"],
+  ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", "4159+W+Addison+St+Chicago,+IL+60641"]
 ]
 
 async function mintToken(contracts) {
@@ -55,7 +55,7 @@ async function addDummyGateway(contracts) {
       "n/a",
       "n/a",
       "n/a",
-      {from: contracts.web3.eth.accounts[9], gas: 256000}
+      {from: contracts.web3.eth.accounts[9], gas: 300000}
     );
     console.log("added dummy gateway, taking care of index 0");
   } catch(error) {
@@ -73,7 +73,7 @@ async function addRealGateways(contracts) {
         SEED_GATEWAY_DATA[i][3],
         SEED_GATEWAY_DATA[i][4],
         SEED_GATEWAY_DATA[i][5],
-        {from: contracts.web3.eth.accounts[8-i], gas: 256000}
+        {from: contracts.web3.eth.accounts[8-i], gas: 300000}
       );
       console.log("added gateway for web3.eth.accounts[" + (8-i) +"]: " + contracts.web3.eth.accounts[8-i]);
     } catch (error) {

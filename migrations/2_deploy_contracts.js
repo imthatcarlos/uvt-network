@@ -5,7 +5,7 @@ var fs = require("fs");
 var path = require("path");
 
 module.exports = function(deployer) {
-  var filePath = path.join(__dirname, "../json/addresses.json");
+  var filePath = path.join(__dirname, "../src/json/addresses.json");
   var data = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
   var networkIdx = process.argv.indexOf("network");
