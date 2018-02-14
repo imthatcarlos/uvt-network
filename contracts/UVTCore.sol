@@ -69,7 +69,15 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   }
 
   modifier onlyRequestOwner {
-    require(accountToRequestIds[msg.sender] != bytes32(0));
+    require(searchRequests[accountToRequestIds[msg.sender]].owner == msg.sender);
+    _;
+  }
+
+  modifier onlyOwnerOrRequestOwner() {
+    require(
+      searchRequests[accountToRequestIds[msg.sender]].owner == msg.sender
+      || msg.sender == owner
+    );
     _;
   }
 
@@ -356,21 +364,21 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
       && searchRequests[id].expires < now
     ) {
       return SearchState.Expired;
+    } else {
+      return searchRequests[id].state;
     }
-
-    return searchRequests[id].state;
   }
 
   /**
    * Returns all information for the given search request
-   * Can only be called by the contract owner
+   * Can only be called by the contract owner or request owner
    *
    * @param id The SearchRequest id
    */
   function getSearchRequestById(bytes32 id)
     external
     view
-    onlyOwner
+    onlyOwnerOrRequestOwner
     returns (
       address owner,
       bytes32 endpointId,
