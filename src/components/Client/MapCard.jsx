@@ -88,7 +88,7 @@ class MapCard extends Component {
         if (this.props.gateways.length > 0) {
           lat = parseFloat(this.props.gateways[0][1]);
           long = parseFloat(this.props.gateways[0][2]);
-        } else if (this.props.status === "Found" ) {
+        } else if (this.props.status === "Found" && this.props.foundLat ) {
           lat = parseFloat(this.props.foundLat);
           long = parseFloat(this.props.foundLong);
         } else {
