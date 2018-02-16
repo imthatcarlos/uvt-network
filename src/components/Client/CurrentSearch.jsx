@@ -26,16 +26,34 @@ class CurrentSearch extends Component {
     super(props);
     this.onGetBalance = this.onGetBalance.bind(this);
     this.expiresDateLocal = this.expiresDateLocal.bind(this);
+    this.getSearchStatus = this.getSearchStatus.bind(this);
+    this.getGateways = this.getGateways.bind(this);
+    this.cancelSearch = this.cancelSearch.bind(this);
+    this.newSearch = this.newSearch.bind(this);
+    this.searchExpired = this.searchExpired.bind(this);
+    this.componentWillUnmount = this.componentWillUnmount.bind(this);
+    this.watchForEndpointFound = this.watchForEndpointFound.bind(this);
 
     this.state = {
       _endpointFound: false,
       gateways: []
     }
+
+    // need to do here sine stopWatching() doesn't work
+    // and we can't setState on unmounted components
+    if (this.props.isPrevious) {
+      if (SEARCH_STATES[this.props.data.state] == "Found") {
+        this.watchForEndpointFound();
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    this.props.uvtCore.SearchEndpointFound().stopWatching();
   }
 
   expiresDateLocal() {
-    var ts = this.props.data.expires;
-    var date = new Date(ts * 1000);
+    var date = new Date(this.props.data.expires);
     return date.toLocaleString("en-US", {hour12: true });
   }
 
@@ -60,21 +78,128 @@ class CurrentSearch extends Component {
     });
   }
 
-  getRequestStatus() {
+  getSearchStatus() {
     var _this = this;
     return new Promise(function(resolve, reject) {
-      _this.props.uvtCore.getSearchRequestStatus()
-      .then((results) => {
-        var state = _this.props.web3.toDecimal(results);
-        resolve(SEARCH_STATES[state]);
+      if (!_this.props.isPrevious) {
+        _this.props.uvtCore.getSearchRequestStatus()
+        .then((results) => {
+          var state = SEARCH_STATES[_this.props.web3.toDecimal(results)];
+
+          if (state === "Expired") {
+            _this.searchExpired();
+          }
+
+          resolve(state);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+      } else {
+        var state = SEARCH_STATES[_this.props.data.state];
+        resolve(state);
+      }
+    });
+  }
+
+  cancelSearch() {
+    var _this = this;
+    this.props.uvtCore.getSearchRequestId({from: this.props.web3.eth.coinbase})
+    .then((id) => {
+      _this.props.addNotification("Cancelling search request...", "warning");
+      _this.props.uvtCore.cancelSearch(id, {from: this.props.web3.eth.coinbase, gas: 300000})
+      .then(() => {
+        _this.props.storeSearchRequestId(id);
+        _this.props.addNotification("Search request cancelled", "success");
       })
       .catch((err) => {
-        reject(err);
+        console.log(err);
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  // TODO: since we're relying on props.previousSearchRequestId, this will be
+  // called every time we fetch the status. The smart contracts protects against
+  // this by requiring the search request to be active for searchExpired() to
+  // execute
+  searchExpired() {
+    var _this = this;
+    this.props.uvtCore.getSearchRequestId({from: this.props.web3.eth.coinbase})
+    .then((id) => {
+      _this.props.addNotification("Search request has expired...", "warning");
+      _this.props.uvtCore.searchExpired(id, {from: this.props.web3.eth.coinbase, gas: 300000})
+      .then(() => {
+        _this.props.addNotification("Gateways have received payment", "warning");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  newSearch() {
+    this.props.storeSearchRequestId(null);
+  }
+
+  // NOTE: there's no mining on testrpc, so we always get all events, regardless
+  // of the fromBlock param in SearchEndpointFound() we provide
+  watchForEndpointFound() {
+    var _this = this;
+    this.props.uvtCore.SearchEndpointFound(
+      {id: this.props.previousId},
+      {fromBlock: 0, toBlock: "latest"}
+    )
+    .watch(function(error, event) {
+      var ts = _this.props.web3.toDecimal(event.args.time);
+      var date = new Date(ts * 1000);
+      _this.setState({
+        foundLat: event.args.lat,
+        foundLong: event.args.long,
+        foundDate: date.toLocaleString("en-US", {hour12: true })
       });
     });
   }
 
   render() {
+    var mapInfo;
+    if (SEARCH_STATES[this.props.data.state] === "Found") {
+      mapInfo = (
+        <Column width="7/12">
+          <MapCard
+              status={"Found"}
+              foundLat={this.state.foundLat}
+              foundLong={this.state.foundLong}
+              gateways={[]}
+              zip={""}
+          />
+        </Column>
+      )
+    } else {
+      mapInfo = (
+        <Column width="7/12">
+            <Async
+              promise={this.getGateways()}
+              then={(results) => {
+                return (
+                  <MapCard
+                      status={SEARCH_STATES[this.props.data.state]}
+                      expires={this.props.data.expires}
+                      gateways={results}
+                      zip={""}
+                  />
+                )
+              }}
+            />
+        </Column>
+      )
+    }
+
     return (
       <div className="content">
           <Grid fluid>
@@ -89,7 +214,7 @@ class CurrentSearch extends Component {
                           content={
                               <div className="content">
                                   <Async
-                                    promise={this.getRequestStatus()}
+                                    promise={this.getSearchStatus()}
                                     then={(results) => {
                                       var button;
                                       switch (results) {
@@ -109,12 +234,11 @@ class CurrentSearch extends Component {
                                               }
                                           </Button>
                                           break;
-                                        case "Found":
-                                        case "Cancelled":
                                         case "Expired":
+                                        case "Cancelled":
                                           button = <Button style={{ marginTop: "16px"}}
                                               bsStyle="success"
-                                              onClick={() => this.newRequest()}
+                                              onClick={() => this.newSearch()}
                                           >
                                               {
                                                 this.state._isCanceling? <ScaleLoader
@@ -127,19 +251,40 @@ class CurrentSearch extends Component {
                                           </Button>
                                           break;
                                       }
+                                      var info;
+                                      if (results == "Found") {
+                                        info = (
+                                          <div>
+                                            <Col md={5}>
+                                              <ControlLabel>Date Found</ControlLabel>
+                                              <p style={{fontSize:"22px"}}>{this.state.foundDate}</p>
+                                            </Col>
+                                            <Col md={3}>
+                                              <ControlLabel>Location</ControlLabel>
+                                              <p style={{fontSize:"22px"}}>See Map</p>
+                                            </Col>
+                                          </div>
+                                        )
+                                      } else {
+                                        info = (
+                                          <div>
+                                            <Col md={5}>
+                                              <ControlLabel>Expires</ControlLabel>
+                                              <p style={{fontSize:"22px"}}>{this.expiresDateLocal()}</p>
+                                            </Col>
+                                            <Col md={3}>
+                                              {button}
+                                            </Col>
+                                          </div>
+                                        )
+                                      }
                                       return (
                                         <Row>
                                           <Col md={4}>
                                             <ControlLabel>Status</ControlLabel>
                                             <p style={{fontSize:"22px"}}>{results}</p>
                                           </Col>
-                                          <Col md={5}>
-                                            <ControlLabel>Expires</ControlLabel>
-                                            <p style={{fontSize:"22px"}}>{this.expiresDateLocal()}</p>
-                                          </Col>
-                                          <Col md={3}>
-                                            {button}
-                                          </Col>
+                                          {info}
                                         </Row>
                                       )
                                     }}
@@ -183,20 +328,7 @@ class CurrentSearch extends Component {
                           }
                       />
                   </Column>
-                  <Column width="7/12">
-                      <Async
-                        promise={this.getGateways()}
-                        then={(results) => {
-                          return (
-                            <MapCard
-                                searching={true}
-                                gateways={results}
-                                zip={""}
-                            />
-                          )
-                        }}
-                      />
-                  </Column>
+                  { mapInfo }
               </Row>
           </Grid>
       </div>

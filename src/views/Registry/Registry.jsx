@@ -30,8 +30,6 @@ class Registry extends Component {
               return res;
             }).catch((error) => { console.log(error) });
           });
-
-          console.log(arr);
           resolve(arr);
         })
         .catch((err) => {

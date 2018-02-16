@@ -141,7 +141,7 @@ class WalletCard extends Component {
                                           <div style={{marginTop: "8px"}}>
                                               <Col xs={3}>
                                                   <div className="icon-big text-center icon-warning">
-                                                      <i className="pe-7s-wallet text-success"></i>
+                                                      <i className="pe-7s-wallet text-info"></i>
                                                   </div>
                                               </Col>
                                               <Col xs={9}>

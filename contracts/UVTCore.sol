@@ -180,7 +180,8 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     uint gatewayId = ownerToGatewayIds[msg.sender];
     SearchRequest storage request = searchRequests[requestId];
     // verify the endpoint's signaure
-    _verifyEndpoint(requestId, request.endpointId, endpointSig, v);
+    // TODO: not working atm
+    //_verifyEndpoint(requestId, request.endpointId, endpointSig, v);
 
     // disburse the funds and close the channel
     _disburseFunds(request.channelId, true, gatewayId, true);
@@ -509,6 +510,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   /**
    * Verify that the endpoint is valid and signed by the account that initiated
    * the request.
+   * TODO: ecrecover giving issues sometimes
    *
    * @param requestId   Id of the search request
    * @param h           Data for the endpoint's signed data [hash, r, s]

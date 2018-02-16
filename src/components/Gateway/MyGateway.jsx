@@ -26,7 +26,7 @@ class MyGateway extends Component {
     return (
       <div className="content">
           <Card
-              title="My Gateway"
+              title="Gateway Registration"
               category="Registed on the UVT Network"
               content={
                   <div>
@@ -116,12 +116,6 @@ class MyGateway extends Component {
                               ]}
                           />
                       </form>
-                      <div className="footer">
-                          <hr />
-                          <div className="stats">
-                              <i className="pe-7s-refresh-cloud"></i>  Dynamic IP Updated: 5 days ago
-                          </div>
-                      </div>
                   </div>
               }
           />

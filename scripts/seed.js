@@ -25,11 +25,11 @@ const UVTCORE_ADDRESS  = json["contracts"]["development"]["UVTCore"];
 const UVT_MINT_AMOUNT = 10000;
 // to be created by eth accounts 4..8
 const SEED_GATEWAY_DATA = [
-  ["127.0.0.3", "37.5566867", "-122.3291684", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
-  ["127.0.0.4", "37.5566797", "-122.3251684", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
-  ["127.0.0.5", "37.5566707", "-122.3203706", "San Mateo", "94402", "809+Bromfield+Rd,+San+Mateo,+CA+94402"],
-  ["127.0.0.6", "41.9367710", "-87.737053", "Chicago", "60641", "4159+W+Addison+St+Chicago,+IL+60641"],
-  ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", "4159+W+Addison+St+Chicago,+IL+60641"]
+  ["127.0.0.3", "37.5566867", "-122.3291684", "San Mateo", "94402", "809+Bromfield+Rd/+San+Mateo,+CA+94402"],
+  ["127.0.0.4", "37.5566797", "-122.3251684", "San Mateo", "94402", "809+Bromfield+Rd/+San+Mateo,+CA+94402"],
+  ["127.0.0.5", "37.5566707", "-122.3203706", "San Mateo", "94402", "809+Bromfield+Rd/+San+Mateo,+CA+94402"],
+  ["127.0.0.6", "41.9367710", "-87.737053", "Chicago", "60641", "4159+W+Addison+St/Chicago,+IL+60641"],
+  ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", "4159+W+Addison+St/Chicago,+IL+60641"]
 ]
 
 async function mintToken(contracts) {

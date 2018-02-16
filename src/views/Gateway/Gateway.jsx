@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {
     Grid, Row, Column
 } from 'react-cellblock';
+import {Table, Col} from 'react-bootstrap'
 
 import {Card} from 'components/Card/Card.jsx';
 import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
@@ -36,15 +37,14 @@ class Gateway extends Component {
       return new Promise(function(resolve, reject) {
         _this.props.uvtCore.getMyGateway({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
         .then((res) => {
-          console.log(res);
           if (res[0] === "") {
             reject(res);
           } else {
             var data = {
               id: _this.props.web3.toDecimal(res[0]),
               ip: res[1],
-              lat: res[2],
-              long: res[3],
+              lat: _this.props.web3.toDecimal(res[2]),
+              long: _this.props.web3.toDecimal(res[3]),
               city: res[4],
               area: res[5],
               addressAndPhone: res[6]
@@ -69,7 +69,7 @@ class Gateway extends Component {
           ),
           level: level,
           position: "tr",
-          autoDismiss: 5,
+          autoDismiss: 10,
       });
     }
 
@@ -123,7 +123,77 @@ class Gateway extends Component {
                             </Row>
                         </Column>
                         <Column width="6/12">
-                            <SearchLog gatewayId={results.id} uvtCore={this.props.uvtCore} />
+                            <Row>
+                                <Column width="6/12">
+                                  <Card
+                                      title="Gateway Status"
+                                      category=""
+                                      content={
+                                          <div className="card-stats">
+                                              <Row>
+                                                  <Col xs={4}>
+                                                      <div style={{marginTop: ""}}>
+                                                          <div className="icon-big text-center icon-warning">
+                                                              <i className="pe-7s-power text-success"></i>
+                                                          </div>
+                                                      </div>
+                                                  </Col>
+                                                  <Col xs={7}>
+                                                      <div className="numbers">
+                                                        Live
+                                                        <p>Since 2/10</p>
+                                                      </div>
+                                                  </Col>
+                                              </Row>
+                                              <div className="space" style={{paddingBottom: "55px"}}></div>
+                                              <div className="footer">
+                                                  <hr />
+                                                  <div className="stats">
+                                                      <i className="pe-7s-refresh-cloud"></i>  Dynamic IP Updated: 5 days ago
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      }
+                                  />
+                                </Column>
+                                <Column width="6/12">
+                                  <Card
+                                      title="Earnings"
+                                      category=""
+                                      content={
+                                          <Table hover>
+                                            <tbody>
+                                              <tr>
+                                                <th>Week:</th>
+                                                <td>20 UVT</td>
+                                              </tr>
+                                              <tr>
+                                                <th>Month:</th>
+                                                <td>140 UVT</td>
+                                              </tr>
+                                              <tr>
+                                                <th>Year:</th>
+                                                <td>510 UVT</td>
+                                              </tr>
+                                            </tbody>
+                                          </Table>
+                                      }
+                                  />
+                                </Column>
+                            </Row>
+                            <Row>
+                              <Column width="12/12">
+                                <SearchLog
+                                  gatewayId={results.id}
+                                  uvtCore={this.props.uvtCore}
+                                  web3={this.props.web3}
+                                  gatewayLat={results.lat}
+                                  gatewayLong={results.long}
+                                  addNotification={this.addNotification}
+                                  storeSearchRequestId={this.props.storeSearchRequestId}
+                                />
+                              </Column>
+                            </Row>
                         </Column>
                     </Row>
                   )

@@ -11,8 +11,6 @@ import Checkbox from 'elements/CustomCheckbox/CustomCheckbox.jsx';
 
 import MapCard from 'components/Client/MapCard.jsx';
 import WalletCard from 'components/Client/WalletCard.jsx';
-
-import Async from 'react-promise';
 import { ScaleLoader } from 'react-spinners';
 
 class NewSearch extends Component {

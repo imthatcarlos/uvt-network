@@ -19,14 +19,19 @@ import getContracts from 'utils/getContracts';
 import Async from 'react-promise'
 import { ScaleLoader } from 'react-spinners';
 
+
+
 class App extends Component {
     constructor(props){
         super(props);
         this.componentDidMount = this.componentDidMount.bind(this);
         this.handleNotificationClick = this.handleNotificationClick.bind(this);
         this.metamaskError = this.metamaskError.bind(this);
+        this.storeSearchRequestId = this.storeSearchRequestId.bind(this);
+
         this.state = {
-            _notificationSystem: null
+            _notificationSystem: null,
+            searchRequestId: null
         };
     }
     handleNotificationClick(position){
@@ -111,9 +116,17 @@ class App extends Component {
             document.documentElement.classList.toggle('nav-open');
         }
     }
+    storeSearchRequestId(id) {
+      this.setState({ searchRequestId: id});
+    }
+    // shouldComponentUpdate(nextProps, nextState) {
+    //   return (
+    //     nextState.searchRequestId !== this.state.searchRequestId
+    //     || this.state._notificationSystem === null
+    //   );
+    // }
     render() {
         return (
-
                 <div className="wrapper">
                     <NotificationSystem ref="notificationSystem" style={style}/>
                     <Sidebar {...this.props} />
@@ -131,42 +144,48 @@ class App extends Component {
                                           color={'#000'}
                                           loading={true}
                                       />  Getting Metamask and contracts
-                                    </div>}
+                                    </div>
+                                }
                                 then={(results) => {
-                                return <Switch>
-                                    {
-                                        appRoutes.map((prop,key) => {
-                                            if(prop.name === "Notifications")
-                                                return (
-                                                    <Route
-                                                        path={prop.path}
-                                                        key={key}
-                                                        render={routeProps =>
-                                                           <prop.component
-                                                               {...routeProps}
-                                                               handleClick={this.handleNotificationClick}
-                                                           />}
-                                                    />
-                                                );
-                                            if(prop.redirect)
-                                                return (
-                                                    <Redirect from={prop.path} to={prop.to} key={key}/>
-                                                );
-                                            return (
+                                    return (
 
-                                                <Route path={prop.path} key={key} render={(routeProps) => (
-                                                    <prop.component {...routeProps}
-                                                        web3={results.web3}
-                                                        uvtToken={results.uvtToken}
-                                                        uvtCore={results.uvtCore}
-                                                        notifications={this.refs.notificationSystem}
-                                                    />
-                                                )}/>
-                                            );
-                                        })
-                                    }
-                                </Switch>
-                            }}
+                                            <Switch>
+                                                {
+                                                    appRoutes.map((prop,key) => {
+                                                        if(prop.name === "Notifications")
+                                                            return (
+                                                                <Route
+                                                                    path={prop.path}
+                                                                    key={key}
+                                                                    render={routeProps =>
+                                                                       <prop.component
+                                                                           {...routeProps}
+                                                                           handleClick={this.handleNotificationClick}
+                                                                       />}
+                                                                />
+                                                            );
+                                                        if(prop.redirect)
+                                                            return (
+                                                                <Redirect from={prop.path} to={prop.to} key={key}/>
+                                                            );
+                                                        return (
+                                                            <Route path={prop.path} key={key} render={(routeProps) => (
+                                                                <prop.component {...routeProps}
+                                                                    web3={results.web3}
+                                                                    uvtToken={results.uvtToken}
+                                                                    uvtCore={results.uvtCore}
+                                                                    notifications={this.refs.notificationSystem}
+                                                                    storeSearchRequestId={this.storeSearchRequestId}
+                                                                    previousSearchRequestId={this.state.searchRequestId}
+                                                                />
+                                                            )}/>
+                                                        );
+                                                    })
+                                                }
+                                            </Switch>
+                                          )
+
+                                }}
                             />
                         <Footer />
                     </div>
