@@ -35,7 +35,7 @@ class Gateway extends Component {
     getAccountGateway() {
       var _this = this;
       return new Promise(function(resolve, reject) {
-        _this.props.uvtCore.getMyGateway({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
+        _this.props.deviceRegistry.getMyGateway({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
         .then((res) => {
           if (res[0] === "") {
             reject(res);

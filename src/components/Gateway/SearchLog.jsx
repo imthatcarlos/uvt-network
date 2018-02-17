@@ -23,9 +23,9 @@ class SearchLog extends Component {
     this.state = {
       // requestID: {data}
       requests: {
-        "1": {endpointId: "c81c...", result: 'FOUND', payout: 10, date: "Mon, May 3rd 12:56pm"},
-        "2": {endpointId: "05f9...", result: 'FOUND', payout: 10, date: "Mon, May 3rd 2:14pm"},
-        "3": {endpointId: "e7cc...", result: 'NONE', payout: 0, date: "Mon, May 3rd 9:01pm"}
+        "1": {endpointId: "c81c...", result: 'FOUND', payout: 10, date: "Mon, January 3rd 12:56pm"},
+        "2": {endpointId: "05f9...", result: 'FOUND', payout: 10, date: "Wed, January 24th 2:14pm"},
+        "3": {endpointId: "e7cc...", result: 'NONE', payout: 0, date: "Tue, January 29th 9:01pm"}
       }
     };
 

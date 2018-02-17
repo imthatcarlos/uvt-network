@@ -13,6 +13,7 @@ const contract = require('truffle-contract');
 
 const tokenArtifact = require('./../src/json/UVTToken.json');
 const coreArtifact  = require('./../src/json/UVTCore.json');
+const odrArtifact   = require('./../src/json/OpenDeviceRegistry.json');
 
 var fs = require("fs");
 var path = require("path");
@@ -21,6 +22,7 @@ var json = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
 const UVTTOKEN_ADDRESS = json["contracts"]["development"]["UVTToken"];
 const UVTCORE_ADDRESS  = json["contracts"]["development"]["UVTCore"];
+const ODR_ADDRESS      = json["contracts"]["development"]["OpenDeviceRegistry"];
 
 const UVT_MINT_AMOUNT = 10000;
 // to be created by eth accounts 4..8
@@ -48,7 +50,7 @@ async function mintToken(contracts) {
 
 async function addDummyGateway(contracts) {
   try {
-    await contracts.uvtCore.addGateway(
+    await contracts.deviceRegistry.addGateway(
       "n/a",
       "n/a",
       "n/a",
@@ -66,7 +68,7 @@ async function addDummyGateway(contracts) {
 async function addRealGateways(contracts) {
   for(var i = 0; i < SEED_GATEWAY_DATA.length; i++) {
     try {
-      await contracts.uvtCore.addGateway(
+      await contracts.deviceRegistry.addGateway(
         SEED_GATEWAY_DATA[i][0],
         SEED_GATEWAY_DATA[i][1],
         SEED_GATEWAY_DATA[i][2],
@@ -89,17 +91,21 @@ function getContracts() {
 
   const coreContract = contract(coreArtifact);
   const tokenContract = contract(tokenArtifact);
+  const odrContract = contract(odrArtifact);
 
   coreContract.setProvider(web3.currentProvider);
   tokenContract.setProvider(web3.currentProvider);
+  odrContract.setProvider(web3.currentProvider);
 
   const core = coreContract.at(UVTCORE_ADDRESS);
   const token = tokenContract.at(UVTTOKEN_ADDRESS);
+  const deviceRegistry = odrContract.at(ODR_ADDRESS);
 
   return {
     web3:     web3,
     uvtToken: token,
-    uvtCore:  core
+    uvtCore:  core,
+    deviceRegistry: deviceRegistry
   };
 }
 

@@ -393,7 +393,7 @@
       "absolutePath": "/Users/carlos/Documents/github/uvt-network/contracts/UVTToken.sol",
       "exportedSymbols": {
         "UVTToken": [
-          1853
+          1933
         ]
       }
     },
@@ -407,49 +407,49 @@
             ".18"
           ]
         },
-        "id": 1840,
+        "id": 1920,
         "name": "PragmaDirective",
         "src": "0:24:4"
       },
       {
         "attributes": {
-          "SourceUnit": 2261,
+          "SourceUnit": 2341,
           "absolutePath": "/Users/carlos/Documents/github/uvt-network/node_modules/zeppelin-solidity/contracts/token/MintableToken.sol",
           "file": "../node_modules/zeppelin-solidity/contracts/token/MintableToken.sol",
-          "scope": 1854,
+          "scope": 1934,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 1841,
+        "id": 1921,
         "name": "ImportDirective",
         "src": "26:77:4"
       },
       {
         "attributes": {
           "contractDependencies": [
-            2007,
-            2093,
-            2136,
-            2165,
-            2260,
-            2506
+            2087,
+            2173,
+            2216,
+            2245,
+            2340,
+            2586
           ],
           "contractKind": "contract",
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            1853,
-            2260,
-            2007,
-            2506,
-            2093,
-            2136,
-            2165
+            1933,
+            2340,
+            2087,
+            2586,
+            2173,
+            2216,
+            2245
           ],
           "name": "UVTToken",
-          "scope": 1854
+          "scope": 1934
         },
         "children": [
           {
@@ -463,15 +463,15 @@
                 "attributes": {
                   "contractScope": null,
                   "name": "MintableToken",
-                  "referencedDeclaration": 2260,
+                  "referencedDeclaration": 2340,
                   "type": "contract MintableToken"
                 },
-                "id": 1842,
+                "id": 1922,
                 "name": "UserDefinedTypeName",
                 "src": "188:13:4"
               }
             ],
-            "id": 1843,
+            "id": 1923,
             "name": "InheritanceSpecifier",
             "src": "188:13:4"
           },
@@ -479,7 +479,7 @@
             "attributes": {
               "constant": false,
               "name": "name",
-              "scope": 1853,
+              "scope": 1933,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "string storage ref",
@@ -491,7 +491,7 @@
                   "name": "string",
                   "type": "string storage pointer"
                 },
-                "id": 1844,
+                "id": 1924,
                 "name": "ElementaryTypeName",
                 "src": "206:6:4"
               },
@@ -508,12 +508,12 @@
                   "type": "literal_string \"Universal Visibility Token\"",
                   "value": "Universal Visibility Token"
                 },
-                "id": 1845,
+                "id": 1925,
                 "name": "Literal",
                 "src": "227:28:4"
               }
             ],
-            "id": 1846,
+            "id": 1926,
             "name": "VariableDeclaration",
             "src": "206:49:4"
           },
@@ -521,7 +521,7 @@
             "attributes": {
               "constant": false,
               "name": "symbol",
-              "scope": 1853,
+              "scope": 1933,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "string storage ref",
@@ -533,7 +533,7 @@
                   "name": "string",
                   "type": "string storage pointer"
                 },
-                "id": 1847,
+                "id": 1927,
                 "name": "ElementaryTypeName",
                 "src": "259:6:4"
               },
@@ -550,12 +550,12 @@
                   "type": "literal_string \"UVT\"",
                   "value": "UVT"
                 },
-                "id": 1848,
+                "id": 1928,
                 "name": "Literal",
                 "src": "282:5:4"
               }
             ],
-            "id": 1849,
+            "id": 1929,
             "name": "VariableDeclaration",
             "src": "259:28:4"
           },
@@ -563,7 +563,7 @@
             "attributes": {
               "constant": false,
               "name": "decimals",
-              "scope": 1853,
+              "scope": 1933,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "uint8",
@@ -575,7 +575,7 @@
                   "name": "uint8",
                   "type": "uint8"
                 },
-                "id": 1850,
+                "id": 1930,
                 "name": "ElementaryTypeName",
                 "src": "291:5:4"
               },
@@ -592,22 +592,22 @@
                   "type": "int_const 18",
                   "value": "18"
                 },
-                "id": 1851,
+                "id": 1931,
                 "name": "Literal",
                 "src": "315:2:4"
               }
             ],
-            "id": 1852,
+            "id": 1932,
             "name": "VariableDeclaration",
             "src": "291:26:4"
           }
         ],
-        "id": 1853,
+        "id": 1933,
         "name": "ContractDefinition",
         "src": "167:153:4"
       }
     ],
-    "id": 1854,
+    "id": 1934,
     "name": "SourceUnit",
     "src": "0:321:4"
   },
@@ -615,33 +615,7 @@
     "name": "solc",
     "version": "0.4.18+commit.9cf6e910.Emscripten.clang"
   },
-  "networks": {
-    "1518812332718": {
-      "events": {},
-      "links": {},
-      "address": "0x8c8cb7163bc0e334bbb09d28399fca5740a0184f"
-    },
-    "1518821682779": {
-      "events": {},
-      "links": {},
-      "address": "0x233970b0de7e79009d4cf0fcc0f2da477939ca35"
-    },
-    "1518890645287": {
-      "events": {},
-      "links": {},
-      "address": "0xa29c1b4893e68ee143accb01ee919d2acf99dc0e"
-    },
-    "1518890819189": {
-      "events": {},
-      "links": {},
-      "address": "0x486cf32ebadddd4eb1a0fe010013b64ed0e33058"
-    },
-    "1518891310444": {
-      "events": {},
-      "links": {},
-      "address": "0xd408e76f3c662e04d30933e95aa74fdf0f555fcb"
-    }
-  },
+  "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-17T18:15:16.969Z"
+  "updatedAt": "2018-02-17T20:27:53.134Z"
 }

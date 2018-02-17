@@ -174,6 +174,7 @@ class App extends Component {
                                                                     web3={results.web3}
                                                                     uvtToken={results.uvtToken}
                                                                     uvtCore={results.uvtCore}
+                                                                    deviceRegistry={results.deviceRegistry}
                                                                     notifications={this.refs.notificationSystem}
                                                                     storeSearchRequestId={this.storeSearchRequestId}
                                                                     previousSearchRequestId={this.state.searchRequestId}

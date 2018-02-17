@@ -89,7 +89,7 @@ class NewGateway extends Component {
     var zip = this.state.addressLine2.split(" ").join("+");
     var addressAndPhone = address + "/" + zip + "/" + this.state.phoneNumber;
 
-    this.props.uvtCore.addGateway(
+    this.props.deviceRegistry.addGateway(
       this.state.ip,
       this.state.lat.toString(),
       this.state.long.toString(),

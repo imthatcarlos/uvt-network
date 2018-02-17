@@ -66,6 +66,48 @@ contract OpenDeviceRegistry is Ownable {
   }
 
   //============================================================================
+  // PUBLIC FUNCTIONS
+  //============================================================================
+
+  /**
+   * Returns the gateway owner's address
+   *
+   * @param id the gateway id
+   */
+  function getGatewayOwner(uint id)
+    public
+    view
+    returns (address)
+  {
+    return gateways[id].owner;
+  }
+
+  /**
+   * Returns the gateway id
+   *
+   * @param sender The address of the account
+   */
+  function getGatewayIdFromOwner(address sender)
+    public
+    view
+    returns (uint)
+  {
+    return ownerToGatewayIds[sender];
+  }
+
+  /**
+   * Verify that the account owns a gateway
+   *
+   */
+  function verifyGatewayOwner(address sender)
+    public
+    view
+    returns (bool)
+  {
+    return gateways[ownerToGatewayIds[sender]].owner == sender;
+  }
+
+  //============================================================================
   // EXTERNAL FUNCTIONS
   //============================================================================
 
@@ -269,5 +311,9 @@ contract OpenDeviceRegistry is Ownable {
     returns (uint)
   {
     return gateways.length;
+  }
+
+  function destroy() external onlyOwner {
+    selfdestruct(owner);
   }
 }

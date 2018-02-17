@@ -1,1 +1,1 @@
-{"contracts":{"development":{"UVTToken":"0x825d24d8212522b2cfc7f7258c32bf478f8e10cf","UVTCore":"0x856a329cd55679f7c5ab84d3520bfe7a538820c7"},"ropsten":{"UVTToken":"","UVTCore":""},"live":{"UVTToken":"","UVTCore":""}}}
+{"contracts":{"development":{"UVTToken":"0x43d08366d50c96e2af1b00b0ac7a01903da287a1","UVTCore":"0x0e1e9dc0d949e487085f83df24c3cab297e737b4","OpenDeviceRegistry":"0x64242e9db79d3a57fd3eeb4aa923d4d480ad791e"},"ropsten":{"UVTToken":"","UVTCore":""},"live":{"UVTToken":"","UVTCore":""}}}

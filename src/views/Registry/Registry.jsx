@@ -20,13 +20,13 @@ class Registry extends Component {
     preparePromises() {
       var _this = this;
       return new Promise(function(resolve, reject) {
-        _this.props.uvtCore.getGatewaysCount()
+        _this.props.deviceRegistry.getGatewaysCount()
         .then((res) => {
           if (res.toNumber() === 0) { reject(res); }
 
           // TODO: account for when contracts's storage array has gaps
           var arr = [...Array(res.toNumber()).keys()].map((idx) => {
-            return _this.props.uvtCore.getGateway(idx).then((res) => {
+            return _this.props.deviceRegistry.getGateway(idx).then((res) => {
               return res;
             }).catch((error) => { console.log(error) });
           });

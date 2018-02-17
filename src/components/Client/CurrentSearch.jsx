@@ -66,7 +66,7 @@ class CurrentSearch extends Component {
     return new Promise(function(resolve, reject) {
       var promises = _this.props.data.invokedGatewayIds.map((id) => {
         if (id != 0) {
-          return _this.props.uvtCore.getGatewayCoordinates(id).then((res) => {
+          return _this.props.deviceRegistry.getGatewayCoordinates(id).then((res) => {
             return [id, parseFloat(res[0]), parseFloat(res[1])];
           }).catch((error) => { reject(error); console.log(error) });
         }

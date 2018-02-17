@@ -1,11 +1,11 @@
 pragma solidity ^0.4.18;
 //pragma experimental ABIEncoderV2;
 
-import './OpenDeviceRegistry.sol';
 import './UVTChannels.sol';
+import './OpenDeviceRegistry.sol';
 import '../node_modules/zeppelin-solidity/contracts/math/SafeMath.sol';
 import '../node_modules/zeppelin-solidity/contracts/token/ERC20.sol';
-
+import '../node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 /**
  * @title UVTCore
@@ -17,7 +17,7 @@ import '../node_modules/zeppelin-solidity/contracts/token/ERC20.sol';
  * TODO: Contract is too large, gas exceeds the mainnet gasLimit
  * OpenDeviceRegistry could be deployed on its own
  */
-contract UVTCore is OpenDeviceRegistry, UVTChannels {
+contract UVTCore is UVTChannels, Ownable {
 
   //============================================================================
   // EVENTS
@@ -51,6 +51,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
   mapping (address => bytes32) accountToRequestIds;
 
   address uvtTokenAddress;
+  OpenDeviceRegistry public deviceRegistry;
 
   uint public GATEWAY_COST_UVT = 10;
 
@@ -88,9 +89,10 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
    *
    * @param tokenAddress The address of the UVTToken contract
    */
-  function UVTCore(address tokenAddress) public {
+  function UVTCore(address tokenAddress, address odrAddress) public {
     owner = msg.sender;
     uvtTokenAddress = tokenAddress;
+    deviceRegistry = OpenDeviceRegistry(odrAddress);
   }
 
   //============================================================================
@@ -175,9 +177,11 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     external
     validRequest(requestId)
     notExpired(requestId)
-    onlyGatewayOwner
   {
-    uint gatewayId = ownerToGatewayIds[msg.sender];
+    // only a gateway owner may call this
+    require(deviceRegistry.verifyGatewayOwner(msg.sender));
+
+    uint gatewayId = deviceRegistry.getGatewayIdFromOwner(msg.sender);
     SearchRequest storage request = searchRequests[requestId];
     // verify the endpoint's signaure
     // TODO: not working atm
@@ -407,6 +411,10 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
     owner.transfer(this.balance);
   }
 
+  function destroy() external onlyOwner {
+    selfdestruct(owner);
+  }
+
   //============================================================================
   // INTERNAL FUNCTIONS
   //============================================================================
@@ -451,11 +459,11 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
 
         for (uint i = 0; i < channel.gatewayIds.length; i++) {
           if (channel.gatewayIds[i] == gatewayIdFound) {
-            if (!uvtToken.transfer(gateways[channel.gatewayIds[i]].owner, finderPayout)) {
+            if (!uvtToken.transfer(deviceRegistry.getGatewayOwner(channel.gatewayIds[i]), finderPayout)) {
               return false;
             }
           } else {
-            if (!uvtToken.transfer(gateways[channel.gatewayIds[i]].owner, othersPayout)) {
+            if (!uvtToken.transfer(deviceRegistry.getGatewayOwner(channel.gatewayIds[i]), othersPayout)) {
               return false;
             }
           }
@@ -463,7 +471,7 @@ contract UVTCore is OpenDeviceRegistry, UVTChannels {
       } else {
         // pay everyone equally
         for (uint j = 0; j < channel.gatewayIds.length; j++) {
-          if (!uvtToken.transfer(gateways[channel.gatewayIds[j]].owner, allPayout)) {
+          if (!uvtToken.transfer(deviceRegistry.getGatewayOwner(channel.gatewayIds[j]), allPayout)) {
             return false;
           }
         }

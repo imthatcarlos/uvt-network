@@ -48,12 +48,12 @@ class NewSearch extends Component {
   getGateways() {
     this.setState({_isFetchingGateways: true});
     var _this = this;
-    this.props.uvtCore.getGatewaysInRange(this.state.inputCity, this.state.inputZip)
+    this.props.deviceRegistry.getGatewaysInRange(this.state.inputCity, this.state.inputZip)
     .then((results) => {
       var ids = results.filter(id => id.toNumber() != 0);
       var promises = ids.map((id) => {
         if (id.toNumber() != 0) {
-          return _this.props.uvtCore.getGatewayCoordinates(id.toNumber()).then((res) => {
+          return _this.props.deviceRegistry.getGatewayCoordinates(id.toNumber()).then((res) => {
             return [id.toNumber(), parseFloat(res[0]), parseFloat(res[1])];
           }).catch((error) => { console.log(error) });
         }

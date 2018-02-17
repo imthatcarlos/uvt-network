@@ -2,6 +2,7 @@ const util = require('ethereumjs-util');
 
 const UVTCore = artifacts.require('./UVTCore.sol');
 const UVTToken = artifacts.require('./UVTToken.sol');
+const OpenDeviceRegistry = artifacts.require('./OpenDeviceRegistry.sol');
 
 const assertRevert = require('../node_modules/zeppelin-solidity/test/helpers/assertRevert');
 const expectEvent = require('../node_modules/zeppelin-solidity/test/helpers/expectEvent');
@@ -18,20 +19,22 @@ const endpointSecret = 'secret';
  */
 async function setupContracts() {
   var token = await UVTToken.new();
-  var ledger = await UVTCore.new(token.address);
+  var deviceRegistry = await OpenDeviceRegistry.new();
+  var ledger = await UVTCore.new(token.address, deviceRegistry.address);
+
   await token.mint(ledger.address, 1000000);
   await token.finishMinting();
 
-  return [ledger, token];
+  return [ledger, token, deviceRegistry];
 }
 
 /**
  * Adds 3 gateways to be used in tests, with default values
  */
-async function addValidGateways(ledger, accounts) {
-  addValidGateway(ledger, accounts[5]);
-  addValidGateway(ledger, accounts[6]);
-  addValidGateway(ledger, accounts[7]);
+async function addValidGateways(deviceRegistry, accounts) {
+  addValidGateway(deviceRegistry, accounts[5]);
+  addValidGateway(deviceRegistry, accounts[6]);
+  addValidGateway(deviceRegistry, accounts[7]);
 }
 
 /**
@@ -66,6 +69,7 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
       await ledger.buyUVT(5, {from: accounts[1], value: 5});
       var balance = await token.balanceOf(accounts[1]);
@@ -81,7 +85,8 @@ contract('UVTCore', function(accounts) {
 
     it('should not send tokens when it did not mint any', async() => {
       var token = await UVTToken.new();
-      var ledger = await UVTCore.new(token.address);
+      var deviceRegistry = await OpenDeviceRegistry.new();
+      var ledger = await UVTCore.new(token.address, deviceRegistry.address);
       try {
         await ledger.buyUVT(5, {from: accounts[1], value: 5});
         assert.fail('it should have thrown before');
@@ -107,8 +112,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
 
       var data = await ledger.getSearchRequest({from: accounts[1]});
@@ -121,8 +127,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
           await createValidSearchRequest(ledger, token, accounts[1]);
 
           var data = await ledger.getSearchRequest({from: accounts[1]});
@@ -134,8 +141,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
 
           // code from createValidSearchRequest()
           var uvtFee = 30; // 10 UVT per gateway
@@ -158,8 +166,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
           var tx = await createValidSearchRequest(ledger, token, accounts[1]);
           expectEvent.inTransaction(tx, 'ChannelOpened');
         });
@@ -168,8 +177,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
 
           // code from createValidSearchRequest()
           var uvtFee = 30; // 10 UVT per gateway
@@ -192,8 +202,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -220,8 +231,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -251,8 +263,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -278,8 +291,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -310,8 +324,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
           await createValidSearchRequest(ledger, token, accounts[1]);
           var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -345,8 +360,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -358,8 +374,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -374,8 +391,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -396,8 +414,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -415,8 +434,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -439,8 +459,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
           await createValidSearchRequest(ledger, token, accounts[1]);
           var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -464,8 +485,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -480,8 +502,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -495,8 +518,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -517,8 +541,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -534,8 +559,9 @@ contract('UVTCore', function(accounts) {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
+      var deviceRegistry = contracts[2]
 
-      await addValidGateways(ledger, accounts);
+      await addValidGateways(deviceRegistry, accounts);
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
@@ -556,8 +582,9 @@ contract('UVTCore', function(accounts) {
           var contracts = await setupContracts();
           var ledger = contracts[0];
           var token = contracts[1];
+          var deviceRegistry = contracts[2]
 
-          await addValidGateways(ledger, accounts);
+          await addValidGateways(deviceRegistry, accounts);
           await createValidSearchRequest(ledger, token, accounts[1]);
           var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
