@@ -9,7 +9,7 @@ module.exports = function(deployer) {
   var filePath = path.join(__dirname, "../src/json/addresses.json");
   var data = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-  var networkIdx = process.argv.indexOf("network");
+  var networkIdx = process.argv.indexOf("--network");
   var network = networkIdx != -1 ? process.argv[networkIdx + 1] : "development"
 
   deployer.deploy(UVTToken).then(function() {

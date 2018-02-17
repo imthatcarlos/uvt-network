@@ -52,10 +52,12 @@ class WalletCard extends Component {
       var amount = this.getInputAmount();
       if (amount != "") {
         this.setState({_isBuying: true});
+        var costPerUVT = this.props.web3.toWei('0.000600', 'ether'); // ~ $0.60 USD
+        var totalCost = costPerUVT * parseInt(amount);
 
         this.props.uvtCore.buyUVT(
           parseInt(amount),
-          {from: this.props.web3.eth.coinbase, gasLimit: 21000, value: parseInt(amount)})
+          {from: this.props.web3.eth.coinbase, gas: 300000, value: totalCost})
         .then((res) => {
           this.addNotification("Purchase successful!", "success");
           ReactDOM.findDOMNode(this.inputAmount).value = "";

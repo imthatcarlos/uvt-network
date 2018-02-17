@@ -101,10 +101,11 @@ contract UVTCore is UVTChannels, Ownable {
 
   /**
    * Transfer UVT tokens to the account in exchange for ETH
-   * TODO: the exchange is 1-1 for demo purposes
+   * NOTE: the exchange is 0.000450 ETH per UVT
    */
   function buyUVT(uint amount) external payable {
-    require(msg.value == amount);
+    // not necessary?
+    //require(msg.value >= amount);
 
     ERC20 uvtToken = ERC20(uvtTokenAddress);
     require(uvtToken.transfer(msg.sender, amount));

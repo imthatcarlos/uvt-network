@@ -54,8 +54,13 @@ class Client extends Component {
     getCurrentRequest() {
       var _this = this;
       return new Promise(function(resolve, reject) {
-        _this.props.uvtCore.getSearchRequest()
+        _this.props.uvtCore.getSearchRequest({from: _this.props.web3.eth.coinbase})
         .then((results) => {
+
+          if (results[0] === "0x") {
+            reject();
+          }
+
           var ids = results[2].map((id) => { return _this.props.web3.toDecimal(id) });
           var data = {
             endpointId: results[1],
@@ -117,7 +122,7 @@ class Client extends Component {
                 return (
                   <CurrentSearch
                     {...this.props}
-                    isPrevious={true} 
+                    isPrevious={true}
                     previousId={this.props.previousSearchRequestId}
                     data={results} addNotification={this.addNotification}
                   />

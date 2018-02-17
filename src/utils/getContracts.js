@@ -7,9 +7,11 @@ import odrArtifact from 'json/OpenDeviceRegistry.json';
 
 var addresses = require("json/addresses.json");
 
-const UVTTOKEN_ADDRESS = addresses["contracts"]["development"]["UVTToken"];
-const UVTCORE_ADDRESS  = addresses["contracts"]["development"]["UVTCore"];
-const ODR_ADDRESS      = addresses["contracts"]["development"]["OpenDeviceRegistry"];
+const network = process.env.REACT_APP_NETWORK || "development";
+
+const UVTTOKEN_ADDRESS = addresses["contracts"][network]["UVTToken"];
+const UVTCORE_ADDRESS  = addresses["contracts"][network]["UVTCore"];
+const ODR_ADDRESS      = addresses["contracts"][network]["OpenDeviceRegistry"];
 
 let getContracts = new Promise(function(resolve, reject) {
   getWeb3

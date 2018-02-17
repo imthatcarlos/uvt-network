@@ -20,9 +20,11 @@ var path = require("path");
 var filePath = path.join(__dirname, "../src/json/addresses.json");
 var json = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-const UVTTOKEN_ADDRESS = json["contracts"]["development"]["UVTToken"];
-const UVTCORE_ADDRESS  = json["contracts"]["development"]["UVTCore"];
-const ODR_ADDRESS      = json["contracts"]["development"]["OpenDeviceRegistry"];
+const network = "development";
+
+const UVTTOKEN_ADDRESS = json["contracts"][network]["UVTToken"];
+const UVTCORE_ADDRESS  = json["contracts"][network]["UVTCore"];
+const ODR_ADDRESS      = json["contracts"][network]["OpenDeviceRegistry"];
 
 const UVT_MINT_AMOUNT = 10000;
 // to be created by eth accounts 4..8
