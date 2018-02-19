@@ -20,19 +20,23 @@ class Registry extends Component {
     preparePromises() {
       var _this = this;
       return new Promise(function(resolve, reject) {
-        _this.props.deviceRegistry.getGatewaysCount()
+        _this.props.deviceRegistry.getGatewaysCount.call({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
         .then((res) => {
-          if (res.toNumber() === 0) { reject(res); }
+          if (res.toNumber() === 0) { resolve([]); }
 
-          // TODO: account for when contracts's storage array has gaps
+          // NOTE: we account for when contracts's storage array has gaps
+          // (getGateway returns bogus data)
           var arr = [...Array(res.toNumber()).keys()].map((idx) => {
-            return _this.props.deviceRegistry.getGateway(idx).then((res) => {
-              return res;
+            return _this.props.deviceRegistry.getGateway.call(idx,{from: _this.props.web3.eth.coinbase, gasLimit: 21000}).then((res) => {
+              if (res[0] != "0x") {
+                return res;
+              }
             }).catch((error) => { console.log(error) });
           });
           resolve(arr);
         })
         .catch((err) => {
+          console.log(err);
           reject(err);
         });
       });
@@ -41,7 +45,7 @@ class Registry extends Component {
     getGateways(promises) {
       return new Promise(function(resolve, reject) {
         Promise.all(promises).then((results) => {
-          resolve(results);
+          resolve(results.filter(n => n));
         });
       });
     }
@@ -77,6 +81,14 @@ class Registry extends Component {
                                               <Async
                                                 promise={this.getGateways(promises)}
                                                 then={(results) => {
+                                                  var emptyLabel;
+                                                  if (results.length === 0) {
+                                                    emptyLabel = <tr>
+                                                      <td colSpan="8">
+                                                          No entries
+                                                      </td>
+                                                    </tr>
+                                                  }
                                                   return (
                                                     <tbody>
                                                       {
@@ -96,6 +108,7 @@ class Registry extends Component {
                                                           )
                                                         })
                                                       }
+                                                      {emptyLabel}
                                                     </tbody>
                                                   )
                                                 }}

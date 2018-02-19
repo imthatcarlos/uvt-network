@@ -36,6 +36,7 @@ class CurrentSearch extends Component {
 
     this.state = {
       _endpointFound: false,
+      _isCanceling: false,
       gateways: []
     }
 
@@ -66,7 +67,11 @@ class CurrentSearch extends Component {
     return new Promise(function(resolve, reject) {
       var promises = _this.props.data.invokedGatewayIds.map((id) => {
         if (id != 0) {
-          return _this.props.deviceRegistry.getGatewayCoordinates(id).then((res) => {
+          return _this.props.deviceRegistry.getGatewayCoordinates.call(
+            id,
+            {from: _this.props.web3.eth.coinbase}
+          )
+          .then((res) => {
             return [id, parseFloat(res[0]), parseFloat(res[1])];
           }).catch((error) => { reject(error); console.log(error) });
         }
@@ -82,7 +87,7 @@ class CurrentSearch extends Component {
     var _this = this;
     return new Promise(function(resolve, reject) {
       if (!_this.props.isPrevious) {
-        _this.props.uvtCore.getSearchRequestStatus()
+        _this.props.uvtCore.getSearchRequestStatus({from: _this.props.web3.eth.coinbase})
         .then((results) => {
           var state = SEARCH_STATES[_this.props.web3.toDecimal(results)];
 
@@ -107,6 +112,7 @@ class CurrentSearch extends Component {
     this.props.uvtCore.getSearchRequestId({from: this.props.web3.eth.coinbase})
     .then((id) => {
       _this.props.addNotification("Cancelling search request...", "warning");
+      _this.setState({_isCanceling: true});
       _this.props.uvtCore.cancelSearch(id, {from: this.props.web3.eth.coinbase, gas: 300000})
       .then(() => {
         _this.props.storeSearchRequestId(id);
@@ -227,8 +233,8 @@ class CurrentSearch extends Component {
                                               {
                                                 this.state._isCanceling? <ScaleLoader
                                                     color={"#FF4A55"}
-                                                    width={7}
                                                     height={16}
+                                                    width={1}
                                                     loading={this.state._isCanceling}
                                                 /> : "Cancel"
                                               }

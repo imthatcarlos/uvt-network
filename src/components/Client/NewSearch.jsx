@@ -48,12 +48,12 @@ class NewSearch extends Component {
   getGateways() {
     this.setState({_isFetchingGateways: true});
     var _this = this;
-    this.props.deviceRegistry.getGatewaysInRange(this.state.inputCity, this.state.inputZip)
+    this.props.deviceRegistry.getGatewaysInRange.call(this.state.inputCity, this.state.inputZip)
     .then((results) => {
       var ids = results.filter(id => id.toNumber() != 0);
       var promises = ids.map((id) => {
         if (id.toNumber() != 0) {
-          return _this.props.deviceRegistry.getGatewayCoordinates(id.toNumber()).then((res) => {
+          return _this.props.deviceRegistry.getGatewayCoordinates.call(id.toNumber()).then((res) => {
             return [id.toNumber(), parseFloat(res[0]), parseFloat(res[1])];
           }).catch((error) => { console.log(error) });
         }
@@ -93,23 +93,40 @@ class NewSearch extends Component {
     }
 
     var _this = this;
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
     this.setState({_isAppoving: true});
-    this.props.addNotification("Approving fee...", "warning");
-    this.props.uvtToken.approve(
+
+    // let's check if they have already approved a fee higher than this one
+    this.props.uvtToken.allowance.call(
+      this.props.web3.eth.coinbase,
       this.props.uvtCore.address,
-      this.state.costUVT,
       {from: this.props.web3.eth.coinbase}
     )
-    .then((results) => {
-      _this.props.addNotification("Fee approved!", "success");
-      _this.createSearchRequest();
-    })
-    .catch((error) => {
-      console.log(error);
-    })
+    .then((result) => {
+      if (result.toNumber() >= this.state.costUVT) {
+        _this.props.addNotification("Account already approved allowance of " + result.toNumber() + " UVT", "success");
+        _this.createSearchRequest();
+      } else {
+        this.props.addNotification("Approving fee...", "warning");
+        this.props.uvtToken.approve(
+          this.props.uvtCore.address,
+          this.state.costUVT,
+          {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
+        )
+        .then((results) => {
+          _this.props.addNotification("Fee approved!", "success");
+          _this.createSearchRequest();
+        })
+        .catch((error) => {
+          console.log(error);
+          this.setState({_isAppoving: false});
+        })
+      }
+    });
   }
 
   createSearchRequest() {
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
     var _this = this;
     var toInvoke = [];
     for (var id in this.state.shouldInvokeGateway) {
@@ -122,7 +139,7 @@ class NewSearch extends Component {
     this.props.uvtCore.createSearchRequest(
       _this.props.web3.toBigNumber(this.state.endpointId),
       toInvoke,
-      {from: this.props.web3.eth.coinbase, gas: 500000}
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
     )
     .then((results) => {
       _this.props.addNotification("Request successfully submitted!");
@@ -131,6 +148,7 @@ class NewSearch extends Component {
     })
     .catch((error) => {
       console.log(error);
+      this.setState({_isAppoving: false});
     })
   }
 

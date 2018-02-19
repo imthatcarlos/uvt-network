@@ -22,6 +22,7 @@ class Gateway extends Component {
       this.getAccountGateway = this.getAccountGateway.bind(this);
       this.addNotification = this.addNotification.bind(this);
       this.onGatewayAdded = this.onGatewayAdded.bind(this);
+      this.onGatewayRemoved = this.onGatewayRemoved.bind(this);
 
       this.state = {
         gatewayData: []
@@ -29,6 +30,10 @@ class Gateway extends Component {
     }
 
     onGatewayAdded() {
+      this.setState({gatewayData: []});
+    }
+
+    onGatewayRemoved() {
       this.setState({gatewayData: []});
     }
 
@@ -53,8 +58,7 @@ class Gateway extends Component {
           }
         })
         .catch((err) => {
-          console.log("no gateway found");
-          reject(err); // they haven't registered device
+          reject(err); // they haven't registered this device
         });
       });
     }
@@ -118,6 +122,9 @@ class Gateway extends Component {
                                     <MyGateway
                                         address={this.props.web3.eth.coinbase}
                                         data={results}
+                                        {...this.props}
+                                        onGatewayRemoved={this.onGatewayRemoved}
+                                        addNotification={this.addNotification}
                                     />
                                 </Column>
                             </Row>

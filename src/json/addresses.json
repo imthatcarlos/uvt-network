@@ -1,18 +1,1 @@
-{
-  "contracts": {
-    "development": {
-      "UVTToken": "0x825d24d8212522b2cfc7f7258c32bf478f8e10cf",
-      "UVTCore": "0x8d19a92421fb423f270e41f95a4eff28c5e79786",
-      "OpenDeviceRegistry": "0x856a329cd55679f7c5ab84d3520bfe7a538820c7"
-    },
-    "ropsten": {
-      "UVTToken": "0x825d24d8212522b2cfc7f7258c32bf478f8e10cf",
-      "UVTCore": "0x8d19a92421fb423f270e41f95a4eff28c5e79786",
-      "OpenDeviceRegistry": "0x856a329cd55679f7c5ab84d3520bfe7a538820c7"
-    },
-    "live": {
-      "UVTToken": "",
-      "UVTCore": ""
-    }
-  }
-}
+{"contracts":{"development":{"UVTToken":"0xcd18b4ce53153e38078796956257fb9eecab4d7d","UVTCore":"0x355598d9b911ed4cd33f9291b467edc85faa9352","OpenDeviceRegistry":"0x84e295b99ca66b89ba9015376d108b2bf3be4215"},"ropsten":{"UVTToken":"0x4dbd7410c285abf0df95424598fa54a7a53a9863","UVTCore":"0x27cc7461e492dc20ef1cfe32f24d2e40cead2823","OpenDeviceRegistry":"0x20b07d5d3113d7c5c0f9407d59b80ed732aafbca"},"live":{"UVTToken":"","UVTCore":""}}}

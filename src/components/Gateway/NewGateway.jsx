@@ -88,7 +88,9 @@ class NewGateway extends Component {
     var address = this.state.streetAddress.split(" ").join("+");
     var zip = this.state.addressLine2.split(" ").join("+");
     var addressAndPhone = address + "/" + zip + "/" + this.state.phoneNumber;
+    var gasPrice = this.props.web3.toWei('0.000000003', 'ether'); // 3 wGwei
 
+    this.props.addNotification("Submitting transaction...", "warning");
     this.props.deviceRegistry.addGateway(
       this.state.ip,
       this.state.lat.toString(),
@@ -96,11 +98,10 @@ class NewGateway extends Component {
       this.state.city,
       this.state.area,
       addressAndPhone,
-      {from: this.props.web3.eth.coinbase, gas: 300000}
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
     ).then(function(txHash) {
       _this.props.addNotification("Device successfully registered!", "success");
       _this.props.onGatewayAdded();
-      console.log('Tx:' + txHash);
     }).catch(function(error) {
       console.log(error);
     });
@@ -246,6 +247,36 @@ class NewGateway extends Component {
                       </form>
                   }
               />
+          </Column>
+          <Column width="6/12">
+            <Card
+                title="UVT Network will cover this transaction fee"
+                category="If you have not submitted your ETH address for approval, please do so now"
+                content={
+                  <form>
+                      <FormInputs
+                          ncols = {["col-md-12"]}
+                          proprieties = {[
+                            {
+                               label : "Gateway Wallet Address",
+                               type : "text",
+                               bsClass : "form-control",
+                               placeholder : "-- UNLOCK YOUR METAMASK ACCOUNT AND REFRESH--",
+                               defaultValue : this.props.web3.eth.coinbase,
+                               disabled : true
+                            }
+                          ]}
+                      />
+                      <Button
+                          bsStyle="info"
+                          pullRight
+                          disabled={this.props.web3.eth.coinbase === null || this.state._isAdding}
+                      > Submit
+                      </Button>
+                      <div className="clearfix"></div>
+                  </form>
+                }
+            />
           </Column>
       </Row>
     )

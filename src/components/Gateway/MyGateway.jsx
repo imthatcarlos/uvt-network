@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import {Card} from 'components/Card/Card.jsx';
 import {FormInputs} from 'components/FormInputs/FormInputs.jsx';
+import Button from 'elements/CustomButton/CustomButton.jsx';
 import Async from 'react-promise'
+import { ScaleLoader } from 'react-spinners';
 
 class MyGateway extends Component {
   constructor(props) {
@@ -11,17 +13,30 @@ class MyGateway extends Component {
     var addressLine2 = data[1].split("+").join(" ");
 
     this.state = {
-      address: props.address,
-      ip: props.data.ip,
-      lat: props.data.lat,
-      long: props.data.long,
-      city: props.data.city,
-      area: props.data.area,
       streetAddress: streetAddress,
       addressLine2: addressLine2,
-      phoneNumber: data[2]
+      phoneNumber: data[2],
+      _isDeleting: false
     };
   }
+
+  deleteGateway() {
+    var _this = this;
+    this.props.addNotification("Submitting transaction...", "warning");
+    this.setState({_isDeleting: true});
+    this.props.deviceRegistry.removeGateway(
+      this.props.data.id,
+      {from: this.props.web3.eth.coinbase, gasLimit: 21000}
+    )
+    .then((result) => {
+      _this.props.addNotification("Gateway removed", "success");
+      _this.props.onGatewayRemoved();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
   render() {
     return (
       <div className="content">
@@ -38,7 +53,7 @@ class MyGateway extends Component {
                                    label : "Gateway Wallet Address",
                                    type : "text",
                                    bsClass : "form-control",
-                                   defaultValue : this.state.address,
+                                   defaultValue : this.props.address,
                                    disabled : true
                                  },
                                  {
@@ -46,7 +61,7 @@ class MyGateway extends Component {
                                   type : "text",
                                   bsClass : "form-control",
                                   placeholder : "IP Address",
-                                  defaultValue : this.state.ip,
+                                  defaultValue : this.props.data.ip,
                                   disabled: true
                                  }
                               ]}
@@ -59,28 +74,28 @@ class MyGateway extends Component {
                                      label : "Latitude",
                                      type : "text",
                                      bsClass : "form-control",
-                                     defaultValue: this.state.lat,
+                                     defaultValue: this.props.data.lat,
                                      disabled: true
                                   },
                                   {
                                      label : "Longitude",
                                      type : "text",
                                      bsClass : "form-control",
-                                     defaultValue: this.state.long,
+                                     defaultValue: this.props.data.long,
                                      disabled: true
                                   },
                                   {
                                      label : "City",
                                      type : "text",
                                      bsClass : "form-control",
-                                     defaultValue: this.state.city,
+                                     defaultValue: this.props.data.city,
                                      disabled: true
                                   },
                                   {
                                      label : "Area",
                                      type : "text",
                                      bsClass : "form-control",
-                                     defaultValue: this.state.area,
+                                     defaultValue: this.props.data.area,
                                      disabled: true
                                   }
                               ]}
@@ -116,6 +131,20 @@ class MyGateway extends Component {
                               ]}
                           />
                       </form>
+                      <Button style={{ marginTop: "8px"}}
+                          bsStyle="danger"
+                          onClick={() => this.deleteGateway()}
+                          disabled={this.state._isDeleting}
+                      >
+                          {
+                            this.state._isDeleting? <ScaleLoader
+                                color={"#FF4A55"}
+                                width={7}
+                                height={16}
+                                loading={this.state._isDeleting}
+                            /> : "Delete My Gateway"
+                          }
+                      </Button>
                   </div>
               }
           />

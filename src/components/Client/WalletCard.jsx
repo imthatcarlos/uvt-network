@@ -53,11 +53,13 @@ class WalletCard extends Component {
       if (amount != "") {
         this.setState({_isBuying: true});
         var costPerUVT = this.props.web3.toWei('0.000600', 'ether'); // ~ $0.60 USD
+        var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
         var totalCost = costPerUVT * parseInt(amount);
 
+        this.addNotification("Submitting transaction...", "warning");
         this.props.uvtCore.buyUVT(
           parseInt(amount),
-          {from: this.props.web3.eth.coinbase, gas: 300000, value: totalCost})
+          {from: this.props.web3.eth.coinbase, gas: 300000, gasPrice: gasPrice, value: totalCost})
         .then((res) => {
           this.addNotification("Purchase successful!", "success");
           ReactDOM.findDOMNode(this.inputAmount).value = "";
@@ -66,6 +68,7 @@ class WalletCard extends Component {
         .catch((err) => {
           console.log(err);
           console.log("error buying tokens");
+          this.setState({_isBuying: false});
         });
       }
     }
@@ -94,7 +97,7 @@ class WalletCard extends Component {
           ),
           level: level,
           position: "tr",
-          autoDismiss: 5,
+          autoDismiss: 10,
       });
     }
 

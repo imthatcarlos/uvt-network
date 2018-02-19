@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Table } from 'react-bootstrap';
 import Card from 'components/Card/Card.jsx';
 import Button from 'elements/CustomButton/CustomButton.jsx';
+import { ScaleLoader } from 'react-spinners';
 
 const dateFormat = require('dateformat');
 
@@ -26,7 +27,8 @@ class SearchLog extends Component {
         "1": {endpointId: "c81c...", result: 'FOUND', payout: 10, date: "Mon, January 3rd 12:56pm"},
         "2": {endpointId: "05f9...", result: 'FOUND', payout: 10, date: "Wed, January 24th 2:14pm"},
         "3": {endpointId: "e7cc...", result: 'NONE', payout: 0, date: "Tue, January 29th 9:01pm"}
-      }
+      },
+      _isFound: false
     };
 
     this.watchForInvocations();
@@ -43,7 +45,7 @@ class SearchLog extends Component {
     this.props.uvtCore.InvokeGateway({id: this.props.gatewayId}, {fromBlock: 0, toBlock: "latest"})
     .watch(function(error, event) {
       // get request status
-      _this.props.uvtCore.getSearchRequestById(event.args.requestId)
+      _this.props.uvtCore.getSearchRequestById.call(event.args.requestId, {from: _this.props.web3.eth.coinbase})
       .then((results) => {
         var status = SEARCH_STATES[_this.props.web3.toDecimal(results[4])];
         var expires = _this.props.web3.toDecimal(results[5]) * 1000;
@@ -71,42 +73,61 @@ class SearchLog extends Component {
   }
 
   getOwnerSignedData(endpointId) {
-    var account = this.props.web3.eth.coinbase;
-    var endpointSecret = 'secret'; // stored locally on the item
-
-    var messageHash = this.props.web3.sha3(endpointId, endpointSecret);
-    var sig = this.props.web3.eth.sign(account, messageHash).slice(2);
-    var r = '0x' + sig.slice(0, 64);
-    var s = '0x' + sig.slice(64, 128);
-    var v = this.props.web3.toDecimal('0x' + sig.slice(128, 130)) + 27;
-
-    return [messageHash, r, s, v];
+    // var account = this.props.web3.eth.coinbase;
+    // var endpointSecret = 'secret'; // stored locally on the item
+    //
+    // var messageHash = this.props.web3.sha3(endpointId, endpointSecret);
+    // this.props.web3.eth.sign(account, messageHash, function(error, result) {
+    //   var sig = result.slice(2);
+    //   var r = '0x' + sig.slice(0, 64);
+    //   var s = '0x' + sig.slice(64, 128);
+    //   var v = this.props.web3.toDecimal('0x' + sig.slice(128, 130)) + 27;
+    //
+    //   var sigData = [messageHash, r, s, v];
+    // });
   }
 
   endpointFound(requestId, endpointId) {
-    var sigData = this.getOwnerSignedData(endpointId);
     var foundLat = this.props.gatewayLat;
     var foundLong = this.props.gatewayLong;
+    var gasPrice = this.props.web3.toWei('0.000000003', 'ether'); // 3 wGwei
+    var _this = this;
 
-    // so we can have for getPreviousRequest()
-    this.props.storeSearchRequestId(requestId);
+    var account = this.props.web3.eth.coinbase;
+    var endpointSecret = 'secret'; // stored locally on the item
 
-    this.props.uvtCore.endpointFound(
-      requestId,
-      [sigData[0], sigData[1], sigData[2]],
-      sigData[3],
-      foundLat.toString(),
-      foundLong.toString(),
-      {from: this.props.web3.eth.coinbase, gas: 300000}
-    )
-    .then(() => {
-      this.props.addNotification("Simulated endpoint found - see UVT Client tab");
-      this.props.addNotification("Gateway received payment");
-    })
-    .catch((err) => {
-      console.log(err);
-      this.props.addNotification("Error with endpointFound() - see console", "error");
-    })
+    this.setState({_isFound: true});
+
+    this.props.addNotification("Signing endpoint data on behalf of item owner", "info");
+    var messageHash = this.props.web3.sha3(endpointId, endpointSecret);
+    this.props.web3.eth.sign(account, messageHash, function(error, result) {
+      var sig = result.slice(2);
+      var r = '0x' + sig.slice(0, 64);
+      var s = '0x' + sig.slice(64, 128);
+      var v = _this.props.web3.toDecimal('0x' + sig.slice(128, 130)) + 27;
+      var sigData = [messageHash, r, s, v];
+
+      _this.props.addNotification("Data signed", "success");
+      _this.props.addNotification("Submitting transaction...", "warning");
+      _this.props.uvtCore.endpointFound(
+        requestId,
+        [sigData[0], sigData[1], sigData[2]],
+        sigData[3],
+        foundLat.toString(),
+        foundLong.toString(),
+        {from: _this.props.web3.eth.coinbase, gas: 300000, gasPrice: gasPrice}
+      )
+      .then(() => {
+        // so we can have for getPreviousRequest()
+        _this.props.storeSearchRequestId(requestId);
+        _this.props.addNotification("Simulated endpoint found - see UVT Client tab");
+        _this.props.addNotification("Gateway received payment");
+      })
+      .catch((err) => {
+        console.log(err);
+        _this.props.addNotification("Error with endpointFound() - see console", "error");
+      });
+    });
   }
 
   render() {
@@ -119,7 +140,13 @@ class SearchLog extends Component {
             <Button style={{ marginLeft: "15px"}}
                 bsStyle="success"
                 onClick={() => this.endpointFound(key, this.state.requests[key].endpointId)}
-            > Found Item
+                disabled={this.state._isFound}
+            > { this.state._isFound? <ScaleLoader
+                color={"#049F0C"}
+                loading={this.state._isFound}
+                height={16}
+                width={1}
+            /> : "Found Item" }
             </Button>
         )
       } else {
