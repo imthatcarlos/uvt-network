@@ -39,6 +39,8 @@ const SEED_GATEWAY_DATA = [
   ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", "4159+W+Addison+St/Chicago,+IL+60641"]
 ]
 
+const NEW_OWNER_ADDRESS="0x4D801B0a7db8097BeCF2B3142B8245923781e1c4"
+
 async function mintToken(contracts, ownerAccount) {
   console.log("minting tokens...");
   try {
@@ -121,6 +123,21 @@ async function destroyContracts() {
     await contracts.uvtCore.destroy({from: result[0]});
     await contracts.deviceRegistry.destroy({from: result[0]});
     console.log("contracts destroyed");
+  });
+}
+
+async function transferOwnership() {
+  var contracts = getContracts(0); // contracts owner
+
+  console.log("getting contract owner account...");
+  await contracts.web3.eth.getAccounts(async function(error, result) {
+    console.log("setting new owner for all smart contracts");
+    await contracts.uvtCore.transferOwnership(NEW_OWNER_ADDRESS, {from: result[0]});
+    console.log("UVTCore - done");
+    await contracts.deviceRegistry.transferOwnership(NEW_OWNER_ADDRESS, {from: result[0]});
+    console.log("OpenDeviceRegistry - done");
+    await contracts.uvtToken.transferOwnership(NEW_OWNER_ADDRESS, {from: result[0]});
+    console.log("UVTToken - done");
   });
 }
 
