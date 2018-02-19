@@ -1,5 +1,6 @@
 {
   "name": "uvt-network",
+  "author": "Carlos Beltran <imthatcarlos@gmail.com>",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
@@ -16,7 +17,6 @@
     "eject": "react-scripts eject"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/maps": "^0.4.5",
