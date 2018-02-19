@@ -19,7 +19,13 @@ class Registry extends Component {
 
     preparePromises() {
       var _this = this;
-      return new Promise(function(resolve, reject) {
+      return new Promise(async function(resolve, reject) {
+        // only the contract owner can see entries
+        var owner = await _this.props.deviceRegistry.owner.call({from: _this.props.web3.eth.coinbase})
+        if (owner != _this.props.web3.eth.coinbase) {
+          reject("not owner");
+        }
+
         _this.props.deviceRegistry.getGatewaysCount.call({from: _this.props.web3.eth.coinbase, gasLimit: 21000})
         .then((res) => {
           if (res.toNumber() === 0) { resolve([]); }
