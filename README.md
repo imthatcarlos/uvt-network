@@ -11,6 +11,7 @@ OpenDeviceRegistry: 0x20b07d5d3113d7c5c0f9407d59b80ed732aafbca
 Clone the repo and run `npm install`. You will need truffle installed globally
 
 ### Compile & migrate
+Make sure you have testrpc (or ganache-cli) running and listening on port 8545
 ```
 truffle compile
 truffle migrate --network [development|ropsten]
@@ -27,7 +28,6 @@ truffle exec scripts/seed.js
 ```
 
 ### Run tests
-Make sure you have testrpc (or ganache-cli) running and listening on port 8545
 ```
 truffle test
 ```
