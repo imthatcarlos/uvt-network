@@ -47,7 +47,7 @@ async function mintToken(contracts, ownerAccount) {
     var tx = await contracts.uvtToken.mint(
       contracts.uvtCore.address,
       UVT_MINT_AMOUNT,
-      {from: ownerAccount}
+      {from: ownerAccount, gas: 300000}
     );
     await contracts.uvtToken.finishMinting({from: ownerAccount});
     console.log("minted " + UVT_MINT_AMOUNT + " tokens for UVTCore at: " + contracts.uvtCore.address);
@@ -120,8 +120,8 @@ async function destroyContracts() {
   console.log("getting contract owner account...");
   await contracts.web3.eth.getAccounts(async function(error, result) {
     console.log("destroying UVTCore and OpenDeviceRegistry...");
-    await contracts.uvtCore.destroy({from: result[0]});
-    await contracts.deviceRegistry.destroy({from: result[0]});
+    await contracts.uvtCore.destroy({from: result[0], gas: 300000});
+    await contracts.deviceRegistry.destroy({from: result[0], gas: 300000});
     console.log("contracts destroyed");
   });
 }
