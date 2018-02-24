@@ -18,19 +18,17 @@ class SearchLog extends Component {
     super(props);
     this.watchForInvocations = this.watchForInvocations.bind(this);
     this.componentWillUnmount = this.componentWillUnmount.bind(this);
+    this.componentWillMount = this.componentWillMount.bind(this);
     this.endpointFound = this.endpointFound.bind(this);
     this.getOwnerSignedData = this.getOwnerSignedData.bind(this);
 
     this.state = {
-      // requestID: {data}
-      requests: {
-        "1": {endpointId: "c81c...", result: 'FOUND', payout: 10, date: "Mon, January 3rd 12:56pm"},
-        "2": {endpointId: "05f9...", result: 'FOUND', payout: 10, date: "Wed, January 24th 2:14pm"},
-        "3": {endpointId: "e7cc...", result: 'NONE', payout: 0, date: "Tue, January 29th 9:01pm"}
-      },
+      requests: {},
       _isFound: false
     };
+  }
 
+  componentWillMount() {
     this.watchForInvocations();
   }
 
@@ -42,11 +40,17 @@ class SearchLog extends Component {
  // just assume it was us since we are simulating the search process
   watchForInvocations() {
     var _this = this;
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
     this.props.uvtCore.InvokeGateway({id: this.props.gatewayId}, {fromBlock: 0, toBlock: "latest"})
     .watch(function(error, event) {
       // get request status
-      _this.props.uvtCore.getSearchRequestById.call(event.args.requestId, {from: _this.props.web3.eth.coinbase})
+      console.log(event.args.requestId);
+      _this.props.uvtCore.getSearchRequestById.call(
+        event.args.requestId,
+        {from: _this.props.web3.eth.coinbase, gasPrice: gasPrice}
+      )
       .then((results) => {
+        console.log(results);
         var status = SEARCH_STATES[_this.props.web3.toDecimal(results[4])];
         var expires = _this.props.web3.toDecimal(results[5]) * 1000;
 
@@ -90,7 +94,7 @@ class SearchLog extends Component {
   endpointFound(requestId, endpointId) {
     var foundLat = this.props.gatewayLat;
     var foundLong = this.props.gatewayLong;
-    var gasPrice = this.props.web3.toWei('0.000000003', 'ether'); // 3 wGwei
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
     var _this = this;
 
     var account = this.props.web3.eth.coinbase;

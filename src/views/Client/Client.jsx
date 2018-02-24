@@ -119,6 +119,7 @@ class Client extends Component {
           content = <Async
               promise={this.getPreviousRequest()}
               then={(results) => {
+                console.log(this.props.previousSearchRequestId);
                 return (
                   <CurrentSearch
                     {...this.props}
@@ -131,6 +132,7 @@ class Client extends Component {
               catch={(err) => {
                 <div className="content">Error getting search request</div>
               }}
+              pending={<div><p>Fetching previous search request...</p></div>}
           />
         } else {
           content = <Async

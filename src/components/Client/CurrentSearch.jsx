@@ -43,7 +43,7 @@ class CurrentSearch extends Component {
     // need to do here sine stopWatching() doesn't work
     // and we can't setState on unmounted components
     if (this.props.isPrevious) {
-      if (SEARCH_STATES[this.props.data.state] == "Found") {
+      if (SEARCH_STATES[this.props.data.state] === "Found") {
         this.watchForEndpointFound();
       }
     }

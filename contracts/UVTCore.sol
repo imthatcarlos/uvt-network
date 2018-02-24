@@ -74,9 +74,9 @@ contract UVTCore is UVTChannels, Ownable {
     _;
   }
 
-  modifier onlyOwnerOrRequestOwner() {
+  modifier onlyOwnerOrRequestOwner(bytes32 id) {
     require(
-      searchRequests[accountToRequestIds[msg.sender]].owner == msg.sender
+      searchRequests[id].owner == msg.sender
       || msg.sender == owner
     );
     _;
@@ -384,7 +384,7 @@ contract UVTCore is UVTChannels, Ownable {
   function getSearchRequestById(bytes32 id)
     external
     view
-    onlyOwnerOrRequestOwner
+    onlyOwnerOrRequestOwner(id)
     returns (
       address owner,
       bytes32 endpointId,

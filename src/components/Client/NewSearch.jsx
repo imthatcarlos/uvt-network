@@ -167,7 +167,7 @@ class NewSearch extends Component {
                       </Col>
                       <Col xs={9}>
                         <div className="numbers">
-                            <p>Total Search Cost</p>
+                            <p>Total Search Escrow</p>
                             { this.state.costUVT } UVT
                         </div>
                       </Col>

@@ -175,7 +175,7 @@ module.exports = async function(callback) {
   //     }
   //   }
   // });
-
+  //
   // var seedData = SEED_GATEWAY_DATA;
   // for (var i = 0; i < SEED_GATEWAY_DATA.length; i++) {
   //   var _contracts = getContracts(i + 2);
