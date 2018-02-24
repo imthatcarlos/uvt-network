@@ -255,6 +255,11 @@ class CurrentSearch extends Component {
                                                 /> : "New Search"
                                               }
                                           </Button>
+                                        case "Found":
+                                          button = <Button style={{ marginTop: "16px"}}
+                                              bsStyle="success"
+                                              onClick={() => this.newSearch()}
+                                          >New Search</Button>
                                           break;
                                       }
                                       var info;
