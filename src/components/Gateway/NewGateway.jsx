@@ -51,6 +51,10 @@ class NewGateway extends Component {
             .filter(hash => hash["types"].includes("postal_code"));
           var state = response.json.results[0]["address_components"]
             .filter(hash => hash["types"].includes("administrative_area_level_1"));
+          // if there are boroughs?
+          if (locality.length === 0) {
+            locality = state;
+          }
 
           var addressLine2 = locality[0]["long_name"] + ", " + state[0]["short_name"] + " " + postalCode[0]["long_name"];
           _this.setState({
