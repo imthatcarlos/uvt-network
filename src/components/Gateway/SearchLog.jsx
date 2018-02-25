@@ -44,13 +44,11 @@ class SearchLog extends Component {
     this.props.uvtCore.InvokeGateway({id: this.props.gatewayId}, {fromBlock: 0, toBlock: "latest"})
     .watch(function(error, event) {
       // get request status
-      console.log(event.args.requestId);
       _this.props.uvtCore.getSearchRequestById.call(
         event.args.requestId,
         {from: _this.props.web3.eth.coinbase, gasPrice: gasPrice}
       )
       .then((results) => {
-        console.log(results);
         var status = SEARCH_STATES[_this.props.web3.toDecimal(results[4])];
         var expires = _this.props.web3.toDecimal(results[5]) * 1000;
 
@@ -136,7 +134,18 @@ class SearchLog extends Component {
 
   render() {
     var searches = [];
+
+    var data = [];
     for (var key in this.state.requests) {
+      data.push([key, this.state.requests[key].date]);
+    }
+
+    var orderedKeys = data.sort(function(a, b) {
+      return a[1] < b[2] ? 1 : 0;
+    }).map(x => x[0]);
+
+    for (var i = 0; i < orderedKeys.length; i++) {
+      var key = orderedKeys[i];
       var action;
       if (this.state.requests[key].result === "SEARCHING") {
         action = (

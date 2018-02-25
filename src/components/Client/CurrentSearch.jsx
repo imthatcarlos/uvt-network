@@ -255,6 +255,7 @@ class CurrentSearch extends Component {
                                                 /> : "New Search"
                                               }
                                           </Button>
+                                          break;
                                         case "Found":
                                           button = <Button style={{ marginTop: "16px"}}
                                               bsStyle="success"
@@ -273,6 +274,7 @@ class CurrentSearch extends Component {
                                             <Col md={3}>
                                               <ControlLabel>Location</ControlLabel>
                                               <p style={{fontSize:"22px"}}>See Map</p>
+                                              {button}
                                             </Col>
                                           </div>
                                         )
