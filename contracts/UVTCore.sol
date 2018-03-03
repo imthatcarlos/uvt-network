@@ -119,12 +119,13 @@ contract UVTCore is UVTChannels, Ownable {
    * UVT tokens from user's account.
    * Invoked gateways are notified of the request.
    * The search is set to expire in 1 hour
+   * TODO: tx.origin shouldn't be used but we are calling from UVTToken
    *
    * @param endpointId      The id of the endpoint gateways are to find
    * @param gatewayIds The ids of gateways to be invoked
    */
   function createSearchRequest(bytes32 endpointId, uint[] gatewayIds)
-    external
+    public
   {
     // sanity checks
     require(endpointId != bytes32(0));
@@ -136,9 +137,9 @@ contract UVTCore is UVTChannels, Ownable {
     bytes32 channelId = _openChannel(gatewayIds, totalCost, ERC20(uvtTokenAddress));
 
     // create the request
-    bytes32 id = keccak256(msg.sender, channelId, now);
+    bytes32 id = keccak256(tx.origin, channelId, now);
     SearchRequest memory request = SearchRequest({
-      owner: msg.sender,
+      owner: tx.origin,
       endpointId: endpointId,
       invokedGateways: gatewayIds,
       channelId: channelId,
@@ -148,10 +149,10 @@ contract UVTCore is UVTChannels, Ownable {
 
     // save to storage and lookup table
     searchRequests[id] = request;
-    accountToRequestIds[msg.sender] = id;
+    accountToRequestIds[tx.origin] = id;
 
     // invoke gateways
-    SearchInitiated(msg.sender, id, endpointId);
+    SearchInitiated(tx.origin, id, endpointId);
     for(uint i = 0; i < gatewayIds.length; i++) {
       InvokeGateway(gatewayIds[i], endpointId, id);
     }
@@ -492,6 +493,7 @@ contract UVTCore is UVTChannels, Ownable {
 
   /**
    * Verify that the account has approved the fee
+   * TODO: tx.origin shouldn't be used but we are calling from UVTToken
    *
    * @param gatewaysCount The number of gateways the account is paying for
    */
@@ -501,7 +503,7 @@ contract UVTCore is UVTChannels, Ownable {
 
     // make sure they've approved the fee
     /* TODO: might not be necessary after first approval */
-    require(uvtToken.allowance(msg.sender, address(this)) >= totalCost);
+    require(uvtToken.allowance(tx.origin, address(this)) >= totalCost);
 
     return totalCost;
   }

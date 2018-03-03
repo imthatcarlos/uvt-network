@@ -104,6 +104,7 @@ contract UVTChannels {
 
   /**
    * Open a new channel with the recipient. Require a non-zero message
+   * TODO: tx.origin shouldn't be used but we are calling from UVTToken
    *
    * @param gatewayIds The ids of gateways to be part of the channel
    * @param amount     The deposit amount (in UVT)
@@ -114,10 +115,10 @@ contract UVTChannels {
     returns (bytes32)
   {
     // create a channel with the id being a hash of the data
-    bytes32 id = keccak256(msg.sender, gatewayIds[0], now);
+    bytes32 id = keccak256(tx.origin, gatewayIds[0], now);
 
     Channel memory newChannel = Channel({
-      sender: msg.sender,
+      sender: tx.origin,
       gatewayIds: gatewayIds,
       deposit: amount,
       state: ChannelState.Open,
@@ -125,11 +126,11 @@ contract UVTChannels {
     });
 
     // make the deposit
-    require(uvtToken.transferFrom(msg.sender, address(this), amount));
+    require(uvtToken.transferFrom(tx.origin, address(this), amount));
 
     // add it to storage and lookup
     channels[id] = newChannel;
-    activeIds[msg.sender] = id;
+    activeIds[tx.origin] = id;
 
     ChannelOpened(id);
 
