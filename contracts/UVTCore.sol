@@ -28,6 +28,7 @@ contract UVTCore is UVTChannels, Ownable {
   event SearchEndpointFound(bytes32 indexed id, uint gatewayId, uint time, string lat, string long);
   event SearchCancelled(bytes32 indexed id, bool gatewaysPaid);
   event SearchExpired(bytes32 indexed id);
+  event ApprovedEndpointFound(bytes32 indexed id);
 
   event PurchasedUVT(address indexed account, uint amount);
   event ReceivedFunds(address sender, uint value);
@@ -169,7 +170,7 @@ contract UVTCore is UVTChannels, Ownable {
    * @param lat         The latitude part of the endpoint's current location
    * @param long        The longitude part of the endpoint's current location
    */
-  function endpointFound(
+  /* function endpointFound(
     bytes32 requestId,
     bytes32[3] endpointSig,
     uint8 v,
@@ -200,7 +201,7 @@ contract UVTCore is UVTChannels, Ownable {
     delete accountToRequestIds[msg.sender];
 
     SearchEndpointFound(requestId, gatewayId, now, lat, long);
-  }
+  } */
 
   /**
    * Called to check if the request has expired, and if so, update the state
@@ -264,6 +265,37 @@ contract UVTCore is UVTChannels, Ownable {
     delete accountToRequestIds[msg.sender];
 
     SearchCancelled(id, shouldPayGateways);
+  }
+
+  /**
+   * Called from the software client to approve the item was found, close the
+   * channel and release escrow
+   *
+   * @param requestId       The id of the search request
+   * @param gatewayFoundId  The id of the gateway that found the item
+   */
+  function approveEndpointFound(
+    bytes32 requestId,
+    uint gatewayFoundId
+  )
+    external
+    validRequest(requestId)
+    notExpired(requestId)
+    onlyRequestOwner()
+  {
+    SearchRequest storage request = searchRequests[requestId];
+
+    // disburse the funds and close the channel
+    _disburseFunds(request.channelId, true, gatewayFoundId, true);
+    _closeChannel(request.channelId);
+
+    // update search state
+    request.state = SearchState.Found;
+
+    // remove from lookup table
+    delete accountToRequestIds[msg.sender];
+
+    ApprovedEndpointFound(requestId);
   }
 
   /**

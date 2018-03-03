@@ -225,8 +225,8 @@ contract('UVTCore', function(accounts) {
     });
   });
 
-  describe('endpointFound', function() {
-    it('correctly verifies an endpoint signature and updates the search state', async() => {
+  describe('approveEndpointFound', function() {
+    it('updates the search state', async() => {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
@@ -236,23 +236,13 @@ contract('UVTCore', function(accounts) {
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
-      // user encrypted endpoint data and it was stored in memory by the item's
-      // LoRa transmitter
-      var sigData = signEndpointData(accounts[1]);
+      // the software client (via the channel) was notified of the location
+      // and gateway who found, just needs to approve and release escrow
+      await ledger.approveEndpointFound(requestId, 0, {from: accounts[1]});
 
-      // an invoked gateway found the item, notifies the contract with the item's
-      // encrypted data, along with geo location
-      await ledger.endpointFound(
-        requestId,
-        [sigData[0], sigData[1], sigData[2]],
-        sigData[3],
-        '41.878114',
-        '-87.629798',
-        {from: accounts[5]} // the gateway owner
-      );
+      var data = await ledger.getSearchRequestById(requestId, {from: accounts[1]});
 
-      var state = await ledger.getSearchRequestStatus({from: accounts[1]});
-      assert.equal(state.toNumber(), 1, 'search state is now SearchState.Found');
+      assert.equal(data[4].toNumber(), 1, 'search state is now SearchState.Found');
     });
 
     it('pays out the gateways with the finder receiving more', async() => {
@@ -265,20 +255,7 @@ contract('UVTCore', function(accounts) {
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
-      // user encrypted endpoint data and it was stored in memory by the item's
-      // LoRa transmitter
-      var sigData = signEndpointData(accounts[1]);
-
-      // an invoked gateway found the item, notifies the contract with the item's
-      // encrypted data, along with geo location
-      await ledger.endpointFound(
-        requestId,
-        [sigData[0], sigData[1], sigData[2]],
-        sigData[3],
-        '41.878114',
-        '-87.629798',
-        {from: accounts[5]} // the gateway owner
-      );
+      await ledger.approveEndpointFound(requestId, 0, {from: accounts[1]});
 
       // if the uvtFee was 30, the finderPayout should be 14 and othersPayout 8
       var finderBalance = await token.balanceOf(accounts[5]);
@@ -287,7 +264,7 @@ contract('UVTCore', function(accounts) {
       assert.equal(otherBalance, 8, 'other was paid out correctly');
     });
 
-    it('broadcasts a SearchEndpointFound event', async() => {
+    it('broadcasts a ApprovedEndpointFound event', async() => {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
@@ -297,25 +274,12 @@ contract('UVTCore', function(accounts) {
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
-      // user encrypted endpoint data and it was stored in memory by the item's
-      // LoRa transmitter
-      var sigData = signEndpointData(accounts[1]);
+      var tx = await ledger.approveEndpointFound(requestId, 0, {from: accounts[1]});
 
-      // an invoked gateway found the item, notifies the contract with the item's
-      // encrypted data, along with geo location
-      var tx = await ledger.endpointFound(
-        requestId,
-        [sigData[0], sigData[1], sigData[2]],
-        sigData[3],
-        '41.878114',
-        '-87.629798',
-        {from: accounts[5]} // the gateway owner
-      );
-
-      expectEvent.inTransaction(tx, 'SearchEndpointFound');
+      expectEvent.inTransaction(tx, 'ApprovedEndpointFound');
     });
 
-    it('should not allow a non-gateway owner to call', async() => {
+    it('should not allow a non-request owner to call', async() => {
       var contracts = await setupContracts();
       var ledger = contracts[0];
       var token = contracts[1];
@@ -325,21 +289,9 @@ contract('UVTCore', function(accounts) {
       await createValidSearchRequest(ledger, token, accounts[1]);
       var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
-      // user encrypted endpoint data and it was stored in memory by the item's
-      // LoRa transmitter
-      var sigData = signEndpointData(accounts[1]);
-
       try {
-        // an address not linked to a gateway attempts to call, they somehow
-        // got ahold of the signature data
-        await ledger.endpointFound(
-          0,
-          [sigData[0], sigData[1], sigData[2]],
-          sigData[3],
-          '41.878114',
-          '-87.629798',
-          {from: accounts[9]} // they don't own a gateway
-        );
+        // an address not linked to a request attempts to call
+        await ledger.approveEndpointFound(requestId, 0, {from: accounts[9]});
         assert.fail('it should have thrown before');
       } catch (error) {
         assertRevert(error);
@@ -358,20 +310,7 @@ contract('UVTCore', function(accounts) {
           await createValidSearchRequest(ledger, token, accounts[1]);
           var requestId = await ledger.getSearchRequestId({from: accounts[1]});
 
-          // user encrypted endpoint data and it was stored in memory by the item's
-          // LoRa transmitter
-          var sigData = signEndpointData(accounts[1]);
-
-          // an invoked gateway found the item, notifies the contract with the item's
-          // encrypted data, along with geo location
-          var tx = await ledger.endpointFound(
-            requestId,
-            [sigData[0], sigData[1], sigData[2]],
-            sigData[3],
-            '41.878114',
-            '-87.629798',
-            {from: accounts[5]} // the gateway owner
-          );
+          var tx = await ledger.approveEndpointFound(requestId, 0, {from: accounts[1]});
 
           var data = await ledger.getSearchRequestById(requestId);
           var state = await ledger.getChannelState(data[3]);
@@ -382,6 +321,165 @@ contract('UVTCore', function(accounts) {
       });
     });
   });
+
+  // TODO: disabled in favor of approveEndpointFound()
+  // describe('endpointFound', function() {
+  //   it('correctly verifies an endpoint signature and updates the search state', async() => {
+  //     var contracts = await setupContracts();
+  //     var ledger = contracts[0];
+  //     var token = contracts[1];
+  //     var deviceRegistry = contracts[2]
+  //
+  //     await addValidGateways(deviceRegistry, accounts);
+  //     await createValidSearchRequest(ledger, token, accounts[1]);
+  //     var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+  //
+  //     // user encrypted endpoint data and it was stored in memory by the item's
+  //     // LoRa transmitter
+  //     var sigData = signEndpointData(accounts[1]);
+  //
+  //     // an invoked gateway found the item, notifies the contract with the item's
+  //     // encrypted data, along with geo location
+  //     await ledger.endpointFound(
+  //       requestId,
+  //       [sigData[0], sigData[1], sigData[2]],
+  //       sigData[3],
+  //       '41.878114',
+  //       '-87.629798',
+  //       {from: accounts[5]} // the gateway owner
+  //     );
+  //
+  //     var state = await ledger.getSearchRequestStatus({from: accounts[1]});
+  //     assert.equal(state.toNumber(), 1, 'search state is now SearchState.Found');
+  //   });
+  //
+  //   it('pays out the gateways with the finder receiving more', async() => {
+  //     var contracts = await setupContracts();
+  //     var ledger = contracts[0];
+  //     var token = contracts[1];
+  //     var deviceRegistry = contracts[2]
+  //
+  //     await addValidGateways(deviceRegistry, accounts);
+  //     await createValidSearchRequest(ledger, token, accounts[1]);
+  //     var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+  //
+  //     // user encrypted endpoint data and it was stored in memory by the item's
+  //     // LoRa transmitter
+  //     var sigData = signEndpointData(accounts[1]);
+  //
+  //     // an invoked gateway found the item, notifies the contract with the item's
+  //     // encrypted data, along with geo location
+  //     await ledger.endpointFound(
+  //       requestId,
+  //       [sigData[0], sigData[1], sigData[2]],
+  //       sigData[3],
+  //       '41.878114',
+  //       '-87.629798',
+  //       {from: accounts[5]} // the gateway owner
+  //     );
+  //
+  //     // if the uvtFee was 30, the finderPayout should be 14 and othersPayout 8
+  //     var finderBalance = await token.balanceOf(accounts[5]);
+  //     var otherBalance = await token.balanceOf(accounts[6]);
+  //     assert.equal(finderBalance, 14, 'finder was paid out correctly');
+  //     assert.equal(otherBalance, 8, 'other was paid out correctly');
+  //   });
+  //
+  //   it('broadcasts a SearchEndpointFound event', async() => {
+  //     var contracts = await setupContracts();
+  //     var ledger = contracts[0];
+  //     var token = contracts[1];
+  //     var deviceRegistry = contracts[2]
+  //
+  //     await addValidGateways(deviceRegistry, accounts);
+  //     await createValidSearchRequest(ledger, token, accounts[1]);
+  //     var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+  //
+  //     // user encrypted endpoint data and it was stored in memory by the item's
+  //     // LoRa transmitter
+  //     var sigData = signEndpointData(accounts[1]);
+  //
+  //     // an invoked gateway found the item, notifies the contract with the item's
+  //     // encrypted data, along with geo location
+  //     var tx = await ledger.endpointFound(
+  //       requestId,
+  //       [sigData[0], sigData[1], sigData[2]],
+  //       sigData[3],
+  //       '41.878114',
+  //       '-87.629798',
+  //       {from: accounts[5]} // the gateway owner
+  //     );
+  //
+  //     expectEvent.inTransaction(tx, 'SearchEndpointFound');
+  //   });
+  //
+  //   it('should not allow a non-gateway owner to call', async() => {
+  //     var contracts = await setupContracts();
+  //     var ledger = contracts[0];
+  //     var token = contracts[1];
+  //     var deviceRegistry = contracts[2]
+  //
+  //     await addValidGateways(deviceRegistry, accounts);
+  //     await createValidSearchRequest(ledger, token, accounts[1]);
+  //     var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+  //
+  //     // user encrypted endpoint data and it was stored in memory by the item's
+  //     // LoRa transmitter
+  //     var sigData = signEndpointData(accounts[1]);
+  //
+  //     try {
+  //       // an address not linked to a gateway attempts to call, they somehow
+  //       // got ahold of the signature data
+  //       await ledger.endpointFound(
+  //         0,
+  //         [sigData[0], sigData[1], sigData[2]],
+  //         sigData[3],
+  //         '41.878114',
+  //         '-87.629798',
+  //         {from: accounts[9]} // they don't own a gateway
+  //       );
+  //       assert.fail('it should have thrown before');
+  //     } catch (error) {
+  //       assertRevert(error);
+  //     }
+  //   });
+  //
+  //   describe('-- Inherited from UVTChannels', function() {
+  //     describe('_closeChannel', function() {
+  //       it('changes the channel state to Closed and emits an event', async() => {
+  //         var contracts = await setupContracts();
+  //         var ledger = contracts[0];
+  //         var token = contracts[1];
+  //         var deviceRegistry = contracts[2]
+  //
+  //         await addValidGateways(deviceRegistry, accounts);
+  //         await createValidSearchRequest(ledger, token, accounts[1]);
+  //         var requestId = await ledger.getSearchRequestId({from: accounts[1]});
+  //
+  //         // user encrypted endpoint data and it was stored in memory by the item's
+  //         // LoRa transmitter
+  //         var sigData = signEndpointData(accounts[1]);
+  //
+  //         // an invoked gateway found the item, notifies the contract with the item's
+  //         // encrypted data, along with geo location
+  //         var tx = await ledger.endpointFound(
+  //           requestId,
+  //           [sigData[0], sigData[1], sigData[2]],
+  //           sigData[3],
+  //           '41.878114',
+  //           '-87.629798',
+  //           {from: accounts[5]} // the gateway owner
+  //         );
+  //
+  //         var data = await ledger.getSearchRequestById(requestId);
+  //         var state = await ledger.getChannelState(data[3]);
+  //         assert.equal(state, 1, 'the channel state is ChannelState.Closed');
+  //
+  //         expectEvent.inTransaction(tx, 'ChannelClosed');
+  //       });
+  //     });
+  //   });
+  // });
 
   describe('searchExpired', function() {
     it('returns false when the search has not expired', async() => {
