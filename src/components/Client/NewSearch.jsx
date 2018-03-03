@@ -21,6 +21,7 @@ class NewSearch extends Component {
     this.approveFee = this.approveFee.bind(this);
     this.createSearchRequest = this.createSearchRequest.bind(this);
     this.onGetBalance = this.onGetBalance.bind(this);
+    this._getGatewaysFromContract = this._getGatewaysFromContract.bind(this);
 
     this.state = {
       _isFetchingGateways: false,
@@ -46,8 +47,26 @@ class NewSearch extends Component {
   }
 
   getGateways() {
-    this.setState({_isFetchingGateways: true});
+    // try fetching from cache first
     var _this = this;
+    this.props.redisClient.getAsync('gateways').then(function(res) {
+      console.log(res);
+      if (res === null) {
+        return _this._getGatewaysFromContract(_this);
+      }
+      var gateways = JSON.parse(res);
+      console.log(gateways);
+      if (gateways[_this.state.inputCity] === null ||
+            gateways[_this.state.inputCity][_this.state.inputZip] == null) {
+        return _this._getGatewaysFromContract(_this);
+      }
+      console.log("yeah buddy");
+      return gateways[_this.state.inputCity][_this.state.inputZip]
+    });
+  }
+
+  _getGatewaysFromContract(_this) {
+    this.setState({_isFetchingGateways: true});
     this.props.deviceRegistry.getGatewaysInRange.call(this.state.inputCity, this.state.inputZip)
     .then((results) => {
       var ids = results.filter(id => id.toNumber() != 0);
@@ -62,7 +81,20 @@ class NewSearch extends Component {
       Promise.all(promises).then((results) => {
         if (results.length == 0) {
           _this.props.addNotification("No gateways found!", "warning");
+        } else {
+          var gateways = _this.props.redisClient.get('gateways');
+          if (gateways === null) {
+            gateways = {};
+            gateways[_this.state.inputCity] = {};
+          } else {
+            gateways = JSON.parse(gateways);
+          }
+          gateways[_this.state.inputCity][_this.state.inputZip] = results;
+          console.log(gateways);
+          var res = _this.props.redisClient.set('gateways', JSON.stringify(gateways));
+          console.log(res);
         }
+
         _this.setState({
           gateways: results,
           _isFetchingGateways: false

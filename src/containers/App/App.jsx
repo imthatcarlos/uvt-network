@@ -19,7 +19,9 @@ import getContracts from 'utils/getContracts';
 import Async from 'react-promise'
 import { ScaleLoader } from 'react-spinners';
 
-
+const bluebird = require("bluebird");
+const redisClient = require('redis-js');
+bluebird.promisifyAll(redisClient);
 
 class App extends Component {
     constructor(props){
@@ -178,6 +180,7 @@ class App extends Component {
                                                                     notifications={this.refs.notificationSystem}
                                                                     storeSearchRequestId={this.storeSearchRequestId}
                                                                     previousSearchRequestId={this.state.searchRequestId}
+                                                                    redisClient={redisClient}
                                                                 />
                                                             )}/>
                                                         );
