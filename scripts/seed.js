@@ -86,6 +86,11 @@ async function addRealGateways(contracts) {
   }
 }
 
+async function setUVTCoreAddress(contracts) {
+  await contracts.uvtToken.setUVTCoreAddress(contracts.uvtCore.address, {from: contracts.web3.eth.accounts[0]});
+  console.log("set UVTCore address on UVTToken");
+}
+
 function getContracts() {
   // TODO: from configured??
   var provider = new Web3.providers.HttpProvider('http://127.0.0.1:8545');
@@ -115,6 +120,7 @@ module.exports = function(callback) {
   console.log("start seeding");
   var contracts = getContracts();
   try {
+    setUVTCoreAddress(contracts);
     mintToken(contracts);
     addDummyGateway(contracts);
     addRealGateways(contracts);

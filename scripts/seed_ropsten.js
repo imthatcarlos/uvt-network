@@ -141,6 +141,13 @@ async function transferOwnership() {
   });
 }
 
+async function setUVTCoreAddress(); {
+  var contracts = getContracts(0) // contracts owner
+  await contracts.web3.eth.getAccounts(async function(error, result) {
+    await contracts.uvtToken.setUVTCoreAddress(contracts.uvtCore.address, {from: result[0]});
+  });
+}
+
 // Metamask provider won't refresh, so we can't do all blocks at once.
 // The for loop at the end won't work either.
 module.exports = async function(callback) {

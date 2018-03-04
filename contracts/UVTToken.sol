@@ -40,13 +40,13 @@ contract UVTToken is MintableToken {
     uint[] gatewayIds
   )
     public
-    returns (bool)
+    returns (bytes32)
   {
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
 
-    coreContract.createSearchRequest(endpointId, gatewayIds);
+    bytes32 id = coreContract.createSearchRequest(endpointId, gatewayIds);
 
-    return true;
+    return id;
   }
 }

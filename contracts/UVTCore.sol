@@ -127,6 +127,7 @@ contract UVTCore is UVTChannels, Ownable {
    */
   function createSearchRequest(bytes32 endpointId, uint[] gatewayIds)
     public
+    returns (bytes32)
   {
     // sanity checks
     require(endpointId != bytes32(0));
@@ -157,6 +158,8 @@ contract UVTCore is UVTChannels, Ownable {
     for(uint i = 0; i < gatewayIds.length; i++) {
       InvokeGateway(gatewayIds[i], endpointId, id);
     }
+
+    return id;
   }
 
   /**
