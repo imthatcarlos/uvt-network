@@ -26,12 +26,12 @@ class NewSearch extends Component {
     this.state = {
       _isFetchingGateways: false,
       _isAppoving: false,
-      endpointId: "0x61b3898bc853c561e2ea0fd4ea2801f795a733d0",
+      endpointId: '0x61b3898bc853c561e2ea0fd4ea2801f795a733d0',
       balance: 0,
       gateways: [],
       shouldInvokeGateway: {},
-      inputCity: "",
-      inputZip: "",
+      inputCity: '',
+      inputZip: '',
       costUVT: 0
     };
   }
@@ -50,22 +50,20 @@ class NewSearch extends Component {
     // try fetching from cache first
     var _this = this;
     this.props.redisClient.getAsync('gateways').then(function(res) {
-      console.log(res);
       if (res === null) {
         return _this._getGatewaysFromContract(_this);
       }
       var gateways = JSON.parse(res);
-      console.log(gateways);
       if (gateways[_this.state.inputCity] === null ||
             gateways[_this.state.inputCity][_this.state.inputZip] == null) {
-        return _this._getGatewaysFromContract(_this);
+        return _this._getGatewaysFromContract();
       }
-      console.log("yeah buddy");
       return gateways[_this.state.inputCity][_this.state.inputZip]
     });
   }
 
-  _getGatewaysFromContract(_this) {
+  _getGatewaysFromContract() {
+    var _this = this;
     this.setState({_isFetchingGateways: true});
     this.props.deviceRegistry.getGatewaysInRange.call(this.state.inputCity, this.state.inputZip)
     .then((results) => {
@@ -80,7 +78,7 @@ class NewSearch extends Component {
 
       Promise.all(promises).then((results) => {
         if (results.length == 0) {
-          _this.props.addNotification("No gateways found!", "warning");
+          _this.props.addNotification('No gateways found!', 'warning');
         } else {
           var gateways = _this.props.redisClient.get('gateways');
           if (gateways === null) {
@@ -89,10 +87,11 @@ class NewSearch extends Component {
           } else {
             gateways = JSON.parse(gateways);
           }
+          if (gateways[_this.state.inputCity] === null) {
+            gateways[_this.state.inputCity] = {};
+          }
           gateways[_this.state.inputCity][_this.state.inputZip] = results;
-          console.log(gateways);
-          var res = _this.props.redisClient.set('gateways', JSON.stringify(gateways));
-          console.log(res);
+          _this.props.redisClient.set('gateways', JSON.stringify(gateways));
         }
 
         _this.setState({
@@ -120,7 +119,7 @@ class NewSearch extends Component {
 
   approveFee() {
     if (this.state.balance < this.state.costUVT) {
-      this.props.addNotification("Not enough funds, purchase some UVT");
+      this.props.addNotification('Not enough funds, purchase some UVT');
       return;
     }
 
@@ -136,17 +135,18 @@ class NewSearch extends Component {
     )
     .then((result) => {
       if (result.toNumber() >= this.state.costUVT) {
-        _this.props.addNotification("Account already approved allowance of " + result.toNumber() + " UVT", "success");
+        _this.props.addNotification('Account already approved allowance of ' + result.toNumber() + ' UVT', 'success');
         _this.createSearchRequest();
       } else {
-        this.props.addNotification("Approving fee...", "warning");
+        this.props.addNotification('Approving fee...', 'warning');
         this.props.uvtToken.approve(
           this.props.uvtCore.address,
           this.state.costUVT,
           {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
         )
         .then((results) => {
-          _this.props.addNotification("Fee approved!", "success");
+          _this.props.addNotification('Fee approved!', 'success');
+          this.props.addNotification('Gateways have been invoked, search in progress', 'info');
           _this.createSearchRequest();
         })
         .catch((error) => {
@@ -155,6 +155,44 @@ class NewSearch extends Component {
         })
       }
     });
+  }
+
+  approveAndCall() {
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
+    var _this = this;
+
+    var toInvoke = [];
+    for (var id in this.state.shouldInvokeGateway) {
+      if (this.state.shouldInvokeGateway[id]) {
+        toInvoke.push(parseInt(id));
+      }
+    }
+
+    this.props.addNotification('Gateways have been invoked', 'info');
+    var data = {}
+    data['gatewayIds'] = toInvoke;
+    this.props.redisClient.set('newSearch', JSON.stringify(data));
+
+    this.setState({_isAppoving: true});
+    this.props.addNotification('Submitting request to Ethereum smart contract...', 'warning');
+    this.props.uvtToken.approveAndCreateRequest(
+      _this.props.uvtCore.address,
+      _this.state.costUVT,
+      _this.props.web3.toBigNumber(this.state.endpointId),
+      toInvoke,
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
+    )
+    .then((results) => {
+      _this.props.addNotification('Request successful...', 'success');
+      data['id'] = results;
+      _this.props.redisClient.set('newSearch', JSON.stringify(data));
+      _this.setState({_isAppoving: false});
+    })
+    .catch((error) => {
+      console.log(error);
+      this.props.addNotification('Error submitting to Ethereum smart contract...', 'error');
+    });
+
   }
 
   createSearchRequest() {
@@ -167,15 +205,15 @@ class NewSearch extends Component {
       }
     }
 
-    this.props.addNotification("Submitting request...", "warning");
+    this.props.addNotification('Submitting request to Ethereum smart contract...', 'warning');
     this.props.uvtCore.createSearchRequest(
       _this.props.web3.toBigNumber(this.state.endpointId),
       toInvoke,
-      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 3000000}
     )
     .then((results) => {
-      _this.props.addNotification("Request successfully submitted!");
-      _this.props.addNotification("Search now in progress...");
+      _this.props.addNotification('Request successful!');
+      _this.props.addNotification('Search now in progress...');
       this.props.onNewRequest();
     })
     .catch((error) => {
@@ -191,14 +229,14 @@ class NewSearch extends Component {
       var summary = <Grid fluid>
           <Row>
               <Col md={8}>
-                  <div className="card-stats" style={{marginTop: "8px"}}>
+                  <div className='card-stats' style={{marginTop: '8px'}}>
                       <Col xs={3}>
-                          <div className="icon-big text-center icon-warning">
-                              <i className="pe-7s-wallet text-success"></i>
+                          <div className='icon-big text-center icon-warning'>
+                              <i className='pe-7s-wallet text-success'></i>
                           </div>
                       </Col>
                       <Col xs={9}>
-                        <div className="numbers">
+                        <div className='numbers'>
                             <p>Total Search Escrow</p>
                             { this.state.costUVT } UVT
                         </div>
@@ -206,30 +244,30 @@ class NewSearch extends Component {
                   </div>
               </Col>
               <Col md={4}>
-                  <Button style={{ marginTop: "14px"}}
-                      bsStyle="info"
+                  <Button style={{ marginTop: '14px'}}
+                      bsStyle='info'
                       onClick={() => this.approveFee()}
                       disabled={this.state._isAppoving}
                   >
                       {
                         this.state._isAppoving? <ScaleLoader
-                            color={"#1DC7EA"}
+                            color={'#1DC7EA'}
                             width={7}
                             height={16}
                             loading={this.state._isAppoving}
-                        /> : "Approve Fee"
+                        /> : 'Approve Fee'
                       }
                   </Button>
-                  <div className="clearfix"></div>
+                  <div className='clearfix'></div>
               </Col>
           </Row>
       </Grid>
 
       gatewaysCard = <Card
-            title="Select the gateways to search for your item"
-            subtitle="Each gateway selected will cost 10 UVT to invoke"
+            title='Select the gateways to search for your item'
+            subtitle='Each gateway selected will cost 10 UVT to invoke'
             content={
-                <div className="content">
+                <div className='content'>
                     <Table striped hover>
                         <tbody>
                             {
@@ -245,7 +283,7 @@ class NewSearch extends Component {
                                       </td>
                                       <td>Gateway ID: {data[0]}</td>
                                       <td>1 mile radius</td>
-                                      <td><i className="pe-7s-check"></i> IP Verified</td>
+                                      <td><i className='pe-7s-check'></i> IP Verified</td>
                                   </tr>
                                 )
                               })
@@ -264,7 +302,7 @@ class NewSearch extends Component {
     return (
       <Grid fluid>
           <Row>
-              <Column width="5/12">
+              <Column width='5/12'>
                   <WalletCard
                     uvtToken={this.props.uvtToken}
                     uvtCore={this.props.uvtCore}
@@ -273,7 +311,7 @@ class NewSearch extends Component {
                     onGetBalance={this.onGetBalance}
                   />
 
-                  <div className="content">
+                  <div className='content'>
                       <Card
                           title="Lost your item? Let's start by finding available gateways in your area"
                           content={
@@ -281,59 +319,59 @@ class NewSearch extends Component {
                                 <form>
                                     <Column>
                                         <FormInputs
-                                            ncols = {["col-md-12"]}
+                                            ncols = {['col-md-12']}
                                             proprieties = {[
                                                 {
-                                                  name: "endpointId",
-                                                  label : "Item Endpoint ID",
-                                                  type : "text",
-                                                  bsClass : "form-control",
+                                                  name: 'endpointId',
+                                                  label : 'Item Endpoint ID',
+                                                  type : 'text',
+                                                  bsClass : 'form-control',
                                                   defaultValue: this.state.endpointId,
                                                   disabled: true
                                                 }
                                             ]}
                                         />
                                     </Column>
-                                    <Column width="2/3">
+                                    <Column width='2/3'>
                                         <FormInputs
-                                            ncols = {["col-md-6", "col-md-6"]}
+                                            ncols = {['col-md-6', 'col-md-6']}
                                             proprieties = {[
                                                 {
-                                                  name: "inputCity",
-                                                  label : "City",
-                                                  type : "text",
-                                                  bsClass : "form-control",
+                                                  name: 'inputCity',
+                                                  label : 'City',
+                                                  type : 'text',
+                                                  bsClass : 'form-control',
                                                   onChange: this.handleChange.bind(this),
-                                                  placeholder : "Enter your city"
+                                                  placeholder : 'Enter your city'
                                                 },
                                                 {
-                                                  name: "inputZip",
-                                                  label : "Zip Code",
-                                                  type : "number",
-                                                  bsClass : "form-control",
+                                                  name: 'inputZip',
+                                                  label : 'Zip Code',
+                                                  type : 'number',
+                                                  bsClass : 'form-control',
                                                   onChange: this.handleChange.bind(this),
-                                                  placeholder : "Enter your zip code",
+                                                  placeholder : 'Enter your zip code',
                                                 }
                                             ]}
                                         />
                                     </Column>
-                                    <Column width="1/3">
+                                    <Column width='1/3'>
                                         <br/>
-                                        <Button style={{ marginTop: "8px"}}
-                                            bsStyle="info"
+                                        <Button style={{ marginTop: '8px'}}
+                                            bsStyle='info'
                                             onClick={() => this.getGateways()}
-                                            disabled={this.state.inputCity == "" || this.state.inputZip == ""}
+                                            disabled={this.state.inputCity == '' || this.state.inputZip == ''}
                                         >
                                             {
                                               this.state._isFetchingGateways? <ScaleLoader
-                                                  color={"#1DC7EA"}
+                                                  color={'#1DC7EA'}
                                                   width={7}
                                                   height={16}
                                                   loading={this.state._isFetchingGateways}
-                                              /> : "Find Gateways"
+                                              /> : 'Find Gateways'
                                             }
                                         </Button>
-                                        <div className="clearfix"></div>
+                                        <div className='clearfix'></div>
                                     </Column>
                                   </form>
                               </Row>
@@ -344,7 +382,7 @@ class NewSearch extends Component {
                   </div>
 
               </Column>
-              <Column width="7/12">
+              <Column width='7/12'>
                   <MapCard
                       searching={false}
                       gateways={this.state.gateways}

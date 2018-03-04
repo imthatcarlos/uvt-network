@@ -69,7 +69,7 @@ contract UVTChannels {
   }
 
   function getChannel(bytes32 id)
-    external
+    public
     validChannel(id)
     view
     returns (
@@ -125,6 +125,7 @@ contract UVTChannels {
       paidOut: 0
     });
 
+    /* TODO: no longer working when calling approveAndCreateRequest within UVTToken - handled in token contract */
     // make the deposit
     require(uvtToken.transferFrom(tx.origin, address(this), amount));
 

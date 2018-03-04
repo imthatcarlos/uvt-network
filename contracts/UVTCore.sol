@@ -79,6 +79,7 @@ contract UVTCore is UVTChannels, Ownable {
     require(
       searchRequests[id].owner == msg.sender
       || msg.sender == owner
+      || searchRequests[id].owner == tx.origin
     );
     _;
   }
@@ -418,7 +419,7 @@ contract UVTCore is UVTChannels, Ownable {
    * @param id The SearchRequest id
    */
   function getSearchRequestById(bytes32 id)
-    external
+    public
     view
     onlyOwnerOrRequestOwner(id)
     returns (
@@ -537,7 +538,7 @@ contract UVTCore is UVTChannels, Ownable {
     uint totalCost = _searchCost(gatewaysCount);
 
     // make sure they've approved the fee
-    /* TODO: might not be necessary after first approval */
+    /* TODO: not working after using tx.origin */
     require(uvtToken.allowance(tx.origin, address(this)) >= totalCost);
 
     return totalCost;
