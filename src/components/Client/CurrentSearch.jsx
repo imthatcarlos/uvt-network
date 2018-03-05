@@ -150,6 +150,7 @@ class CurrentSearch extends Component {
   }
 
   newSearch() {
+    this.props.redisClient.set('gateways', null);
     this.props.storeSearchRequestId(null);
   }
 

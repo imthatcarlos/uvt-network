@@ -13,6 +13,8 @@ import MapCard from 'components/Client/MapCard.jsx';
 import WalletCard from 'components/Client/WalletCard.jsx';
 import { ScaleLoader } from 'react-spinners';
 
+const dateFormat = require('dateformat');
+
 class NewSearch extends Component {
   constructor(props) {
     super(props);
@@ -49,16 +51,18 @@ class NewSearch extends Component {
   getGateways() {
     // try fetching from cache first
     var _this = this;
+    this.props.redisClient.set('gateways', null);
     this.props.redisClient.getAsync('gateways').then(function(res) {
-      if (res === null) {
+      if (res === null || res === '') {
         return _this._getGatewaysFromContract(_this);
       }
+      console.log(res);
       var gateways = JSON.parse(res);
       if (gateways[_this.state.inputCity] === null ||
-            gateways[_this.state.inputCity][_this.state.inputZip] == null) {
+            gateways[_this.state.inputCity][_this.state.inputZip] === null) {
         return _this._getGatewaysFromContract();
       }
-      return gateways[_this.state.inputCity][_this.state.inputZip]
+      return gateways[_this.state.inputCity][_this.state.inputZip];
     });
   }
 
@@ -81,7 +85,7 @@ class NewSearch extends Component {
           _this.props.addNotification('No gateways found!', 'warning');
         } else {
           var gateways = _this.props.redisClient.get('gateways');
-          if (gateways === null) {
+          if (gateways === null || gateways === '') {
             gateways = {};
             gateways[_this.state.inputCity] = {};
           } else {
@@ -205,21 +209,30 @@ class NewSearch extends Component {
       }
     }
 
+    // cache data so we can immediately display on gateway ui
+    var data = {}
+    data['gatewayIds'] = toInvoke;
+    data['endpointId'] = this.state.endpointId;
+    var _now = new Date();
+    _now.setHours(_now.getHours() + 1);
+    data['date'] = dateFormat(_now, "ddd, mmmm dS h:MMtt");
+    this.props.redisClient.set('newSearch', JSON.stringify(data));
+
     this.props.addNotification('Submitting request to Ethereum smart contract...', 'warning');
-    this.props.uvtCore.createSearchRequest(
-      _this.props.web3.toBigNumber(this.state.endpointId),
-      toInvoke,
-      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 3000000}
-    )
-    .then((results) => {
-      _this.props.addNotification('Request successful!');
-      _this.props.addNotification('Search now in progress...');
-      this.props.onNewRequest();
-    })
-    .catch((error) => {
-      console.log(error);
-      this.setState({_isAppoving: false});
-    })
+    // this.props.uvtCore.createSearchRequest(
+    //   _this.props.web3.toBigNumber(this.state.endpointId),
+    //   toInvoke,
+    //   {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 3000000}
+    // )
+    // .then((results) => {
+    //   _this.props.addNotification('Request successful!');
+    //   _this.props.addNotification('Search now in progress...');
+    //   this.props.onNewRequest();
+    // })
+    // .catch((error) => {
+    //   console.log(error);
+    //   this.setState({_isAppoving: false});
+    // })
   }
 
   render() {

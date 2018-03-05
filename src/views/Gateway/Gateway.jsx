@@ -198,6 +198,7 @@ class Gateway extends Component {
                                   gatewayLong={results.long}
                                   addNotification={this.addNotification}
                                   storeSearchRequestId={this.props.storeSearchRequestId}
+                                  redisClient={this.props.redisClient}
                                 />
                               </Column>
                             </Row>

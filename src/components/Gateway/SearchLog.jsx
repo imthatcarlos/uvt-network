@@ -22,8 +22,19 @@ class SearchLog extends Component {
     this.endpointFound = this.endpointFound.bind(this);
     this.getOwnerSignedData = this.getOwnerSignedData.bind(this);
 
+    var requests = {};
+    var cached = this.props.redisClient.get('newSearch');
+    if (cached !== null && cached !== '') {
+      requests['cached'] = {
+        endpointId: cached['endpointId'],
+        result: 'SEARCHING',
+        payout: 0,
+        date: cached['date']
+      };
+    }
+
     this.state = {
-      requests: {},
+      requests: requests,
       _isFound: false
     };
   }
@@ -62,6 +73,13 @@ class SearchLog extends Component {
         }
 
         var requests = _this.state.requests;
+        if (status === 'Searching') {
+          // we were showing cached data before, delete it and show the real request instead (for the id)
+          if (requests['cached'] !== null && requests['cached'] !== '') {
+            delete requests['cached'];
+          }
+        }
+
         requests[event.args.requestId] = {
           endpointId: event.args.endpointId,
           result: status.toUpperCase(),
@@ -141,13 +159,13 @@ class SearchLog extends Component {
     }
 
     var orderedKeys = data.sort(function(a, b) {
-      return a[1] < b[2] ? 1 : 0;
+      return a[1] < b[1] ? 1 : 0;
     }).map(x => x[0]);
 
     for (var i = 0; i < orderedKeys.length; i++) {
       var key = orderedKeys[i];
       var action;
-      if (this.state.requests[key].result === "SEARCHING") {
+      if (this.state.requests[key].result === "SEARCHING" && key !== 'cached') {
         action = (
 
             <Button style={{ marginLeft: "15px"}}
