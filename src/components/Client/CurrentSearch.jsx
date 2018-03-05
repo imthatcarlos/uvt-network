@@ -34,10 +34,21 @@ class CurrentSearch extends Component {
     this.componentWillUnmount = this.componentWillUnmount.bind(this);
     this.watchForEndpointFound = this.watchForEndpointFound.bind(this);
 
+    // var foundDate;
+    // if (props.redisClient.get('currentSearchStatus') === "FOUND") {
+    //   foundDate = (new Date()).toLocaleString("en-US", {hour12: true });
+    // }
+    var foundDate = (new Date()).toLocaleString("en-US", {hour12: true });
+    // foundLocation = JSON.parse(props.redisClient.get('itemFoundLocation'));
+    // if (props.redisClient.get('currentSearchStatus') === "FOUND") {
+    //   foundLocation = JSON.parse(props.redisClient.get('itemFoundLocation'));
+    // }
+
     this.state = {
       _endpointFound: false,
       _isCanceling: false,
-      gateways: []
+      gateways: [],
+      foundDate: foundDate
     }
 
     // need to do here sine stopWatching() doesn't work
@@ -87,19 +98,26 @@ class CurrentSearch extends Component {
     var _this = this;
     return new Promise(function(resolve, reject) {
       if (!_this.props.isPrevious) {
-        _this.props.uvtCore.getSearchRequestStatus({from: _this.props.web3.eth.coinbase})
-        .then((results) => {
-          var state = SEARCH_STATES[_this.props.web3.toDecimal(results)];
+        // the gateway notified us via off chain channel
+        if (_this.props.redisClient.get('currentSearchStatus') === 'FOUND') {
 
-          if (state === "Expired") {
-            _this.searchExpired();
-          }
+          resolve('FOUND_VIA_CHANNEL');
 
-          resolve(state);
-        })
-        .catch((err) => {
-          reject(err);
-        });
+        } else { // we go about it normally
+          _this.props.uvtCore.getSearchRequestStatus({from: _this.props.web3.eth.coinbase})
+          .then((results) => {
+            var state = SEARCH_STATES[_this.props.web3.toDecimal(results)];
+
+            if (state === "Expired") {
+              _this.searchExpired();
+            }
+
+            resolve(state);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+        }
       } else {
         var state = SEARCH_STATES[_this.props.data.state];
         resolve(state);
@@ -173,15 +191,66 @@ class CurrentSearch extends Component {
     });
   }
 
+  approveEndpointFound() {
+    var gatewayFoundId = this.props.redisClient.get('gatewayFoundId');
+
+    this.props.addNotification("Releasing funds from escrow to gateways...", "warning");
+    this.setState({_isReleasing: true});
+
+    var _this = this;
+    this.props.uvtCore.getSearchRequestId({from: this.props.web3.eth.coinbase})
+    .then((id) => {
+      _this.props.uvtCore.approveEndpointFound(
+        id,
+        Number(gatewayFoundId),
+        {from: _this.props.web3.eth.coinbase, gas: 300000}
+      )
+      .then(() => {
+        _this.props.addNotification("Gateways have received payment", "info");
+
+        var foundLocation = JSON.parse(_this.props.redisClient.get('itemFoundLocation'));
+        // flush cache
+        _this.props.redisClient.del('currentSearchStatus');
+        _this.props.redisClient.del('currentSearchId');
+        _this.props.redisClient.del('gatewayFoundId');
+
+        _this.setState({foundLat: String(foundLocation['lat']), foundLong: String(foundLocation['long'])});
+        _this.props.storeSearchRequestId(id);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
   render() {
     var mapInfo;
-    if (SEARCH_STATES[this.props.data.state] === "Found") {
+    if (this.props.redisClient.get('currentSearchStatus') === 'FOUND') {
+      var itemFoundLocation = this.props.redisClient.get('itemFoundLocation');
+      itemFoundLocation = JSON.parse(itemFoundLocation);
       mapInfo = (
         <Column width="7/12">
           <MapCard
               status={"Found"}
-              foundLat={this.state.foundLat}
-              foundLong={this.state.foundLong}
+              foundLat={itemFoundLocation.lat}
+              foundLong={itemFoundLocation.long}
+              gateways={[]}
+              zip={""}
+          />
+        </Column>
+      )
+    } else if (SEARCH_STATES[this.props.data.state] === "Found") {
+      var itemFoundLocation = this.props.redisClient.get('itemFoundLocation');
+      itemFoundLocation = JSON.parse(itemFoundLocation);
+      mapInfo = (
+        <Column width="7/12">
+          <MapCard
+              status={"Found"}
+              foundLat={itemFoundLocation.lat}
+              foundLong={itemFoundLocation.long}
               gateways={[]}
               zip={""}
           />
@@ -263,19 +332,34 @@ class CurrentSearch extends Component {
                                               onClick={() => this.newSearch()}
                                           >New Search</Button>
                                           break;
+                                        case "FOUND_VIA_CHANNEL":
+                                          button = <Button style={{ marginTop: "16px"}}
+                                              bsStyle="info"
+                                              onClick={() => this.approveEndpointFound()}
+                                          >
+                                              {
+                                                this.state._isReleasing? <ScaleLoader
+                                                    color={"#1DC7EA"}
+                                                    width={1}
+                                                    height={16}
+                                                    loading={this.state._isReleasing}
+                                                /> : "Release Escrow"
+                                              }
+                                          </Button>
+                                          break;
                                       }
                                       var info;
-                                      if (results == "Found") {
+                                      if (results == "Found" || results == "FOUND_VIA_CHANNEL") {
                                         info = (
                                           <div>
                                             <Col md={5}>
                                               <ControlLabel>Date Found</ControlLabel>
                                               <p style={{fontSize:"22px"}}>{this.state.foundDate}</p>
+                                                {button}
                                             </Col>
                                             <Col md={3}>
                                               <ControlLabel>Location</ControlLabel>
                                               <p style={{fontSize:"22px"}}>See Map</p>
-                                              {button}
                                             </Col>
                                           </div>
                                         )
@@ -296,7 +380,7 @@ class CurrentSearch extends Component {
                                         <Row>
                                           <Col md={4}>
                                             <ControlLabel>Status</ControlLabel>
-                                            <p style={{fontSize:"22px"}}>{results}</p>
+                                            <p style={{fontSize:"22px"}}>{results === 'FOUND_VIA_CHANNEL' ? 'FOUND' : results}</p>
                                           </Col>
                                           {info}
                                         </Row>

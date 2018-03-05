@@ -29,13 +29,16 @@ class SearchLog extends Component {
         endpointId: cached['endpointId'],
         result: 'SEARCHING',
         payout: 0,
-        date: cached['date']
+        date: dateFormat(cached['date'], "ddd, mmmm dS h:MMtt")
       };
     }
 
+    var _awaitingEscrow = (this.props.redisClient.get("currentSearchStatus") === "FOUND")
+
     this.state = {
       requests: requests,
-      _isFound: false
+      _isFound: false,
+      _awaitingEscrow: _awaitingEscrow
     };
   }
 
@@ -80,11 +83,16 @@ class SearchLog extends Component {
           }
         }
 
+        // date from smart contract is expiry
+        var date = new Date(expires);
+        date.setHours(date.getHours() - 1);
+
         requests[event.args.requestId] = {
           endpointId: event.args.endpointId,
           result: status.toUpperCase(),
           payout: payout,
-          date: dateFormat(new Date(expires), "ddd, mmmm dS h:MMtt")
+          date: dateFormat(date, "ddd, mmmm dS h:MMtt"),
+          ordering_date: date
         };
 
         _this.setState({requests: requests});
@@ -107,47 +115,64 @@ class SearchLog extends Component {
     // });
   }
 
+  // endpointFound(requestId, endpointId) {
+  //   var foundLat = this.props.gatewayLat;
+  //   var foundLong = this.props.gatewayLong;
+  //   var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
+  //   var _this = this;
+  //
+  //   var account = this.props.web3.eth.coinbase;
+  //   var endpointSecret = 'secret'; // stored locally on the item
+  //
+  //   this.setState({_isFound: true});
+  //
+  //   this.props.addNotification("Signing endpoint data on behalf of item owner", "info");
+  //   var messageHash = this.props.web3.sha3(endpointId, endpointSecret);
+  //   this.props.web3.eth.sign(account, messageHash, function(error, result) {
+  //     var sig = result.slice(2);
+  //     var r = '0x' + sig.slice(0, 64);
+  //     var s = '0x' + sig.slice(64, 128);
+  //     var v = _this.props.web3.toDecimal('0x' + sig.slice(128, 130)) + 27;
+  //     var sigData = [messageHash, r, s, v];
+  //
+  //     _this.props.addNotification("Data signed", "success");
+  //     _this.props.addNotification("Submitting transaction...", "warning");
+  //     _this.props.uvtCore.endpointFound(
+  //       requestId,
+  //       [sigData[0], sigData[1], sigData[2]],
+  //       sigData[3],
+  //       foundLat.toString(),
+  //       foundLong.toString(),
+  //       {from: _this.props.web3.eth.coinbase, gas: 300000, gasPrice: gasPrice}
+  //     )
+  //     .then(() => {
+  //       // so we can have for getPreviousRequest()
+  //       _this.props.storeSearchRequestId(requestId);
+  //       _this.props.addNotification("Simulated endpoint found - see UVT Client tab");
+  //       _this.props.addNotification("Gateway received payment");
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //       _this.props.addNotification("Error with endpointFound() - see console", "error");
+  //     });
+  //   });
+  // }
+
   endpointFound(requestId, endpointId) {
+    this.props.addNotification('Notifying client of item found...', 'warning');
+    var _this = this;
+    setTimeout(function() {
+       _this.props.addNotification('Client notified. Awaiting approval and escrow release...', 'info');
+     }, 1000);
+
+    this.props.redisClient.set('currentSearchStatus', 'FOUND');
+    this.props.redisClient.set('currentSearchId', requestId);
+    this.props.redisClient.set('gatewayFoundId', this.props.gatewayId);
     var foundLat = this.props.gatewayLat;
     var foundLong = this.props.gatewayLong;
-    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
-    var _this = this;
+    this.props.redisClient.set('itemFoundLocation', JSON.stringify({lat: foundLat, long: foundLong}));
 
-    var account = this.props.web3.eth.coinbase;
-    var endpointSecret = 'secret'; // stored locally on the item
-
-    this.setState({_isFound: true});
-
-    this.props.addNotification("Signing endpoint data on behalf of item owner", "info");
-    var messageHash = this.props.web3.sha3(endpointId, endpointSecret);
-    this.props.web3.eth.sign(account, messageHash, function(error, result) {
-      var sig = result.slice(2);
-      var r = '0x' + sig.slice(0, 64);
-      var s = '0x' + sig.slice(64, 128);
-      var v = _this.props.web3.toDecimal('0x' + sig.slice(128, 130)) + 27;
-      var sigData = [messageHash, r, s, v];
-
-      _this.props.addNotification("Data signed", "success");
-      _this.props.addNotification("Submitting transaction...", "warning");
-      _this.props.uvtCore.endpointFound(
-        requestId,
-        [sigData[0], sigData[1], sigData[2]],
-        sigData[3],
-        foundLat.toString(),
-        foundLong.toString(),
-        {from: _this.props.web3.eth.coinbase, gas: 300000, gasPrice: gasPrice}
-      )
-      .then(() => {
-        // so we can have for getPreviousRequest()
-        _this.props.storeSearchRequestId(requestId);
-        _this.props.addNotification("Simulated endpoint found - see UVT Client tab");
-        _this.props.addNotification("Gateway received payment");
-      })
-      .catch((err) => {
-        console.log(err);
-        _this.props.addNotification("Error with endpointFound() - see console", "error");
-      });
-    });
+    this.setState({notifyingClient: true, _awaitingEscrow: true});
   }
 
   render() {
@@ -155,7 +180,7 @@ class SearchLog extends Component {
 
     var data = [];
     for (var key in this.state.requests) {
-      data.push([key, this.state.requests[key].date]);
+      data.push([key, this.state.requests[key].ordering_date]);
     }
 
     var orderedKeys = data.sort(function(a, b) {
@@ -165,7 +190,7 @@ class SearchLog extends Component {
     for (var i = 0; i < orderedKeys.length; i++) {
       var key = orderedKeys[i];
       var action;
-      if (this.state.requests[key].result === "SEARCHING" && key !== 'cached') {
+      if (this.state.requests[key].result === "SEARCHING" && key !== 'cached' && !this.state.notifyingClient && this.props.redisClient.get("currentSearchStatus") !== "FOUND") {
         action = (
 
             <Button style={{ marginLeft: "15px"}}
@@ -187,7 +212,7 @@ class SearchLog extends Component {
       searches.push(
         <tr key={key}>
             <td>{this.state.requests[key].date}</td>
-            <td>{this.state.requests[key].result}</td>
+            <td>{this.state._awaitingEscrow && this.state.requests[key].result === "SEARCHING" ? 'AWAITING ESCROW RELEASE' : this.state.requests[key].result}</td>
             <td>{this.state.requests[key].payout} UVT { action }</td>
         </tr>
       )

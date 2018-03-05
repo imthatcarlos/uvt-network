@@ -7,7 +7,7 @@ import odrArtifact from 'json/OpenDeviceRegistry.json';
 
 var addresses = require("json/addresses.json");
 
-const network = process.env.REACT_APP_NETWORK || "development";
+const network = process.env.REACT_APP_NETWORK || "ropsten";
 
 const UVTTOKEN_ADDRESS = addresses["contracts"][network]["UVTToken"];
 const UVTCORE_ADDRESS  = addresses["contracts"][network]["UVTCore"];

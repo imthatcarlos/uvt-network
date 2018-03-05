@@ -102,7 +102,7 @@ class NewGateway extends Component {
       this.state.city,
       this.state.area,
       addressAndPhone,
-      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 4700000}
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gasLimit: 4600000}
     ).then(function(txHash) {
       _this.props.addNotification("Device successfully registered!", "success");
       _this.props.onGatewayAdded();

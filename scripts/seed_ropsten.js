@@ -141,7 +141,7 @@ async function transferOwnership() {
   });
 }
 
-async function setUVTCoreAddress(); {
+async function setUVTCoreAddress() {
   var contracts = getContracts(0) // contracts owner
   await contracts.web3.eth.getAccounts(async function(error, result) {
     await contracts.uvtToken.setUVTCoreAddress(contracts.uvtCore.address, {from: result[0]});

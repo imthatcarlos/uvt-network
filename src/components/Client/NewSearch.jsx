@@ -13,8 +13,6 @@ import MapCard from 'components/Client/MapCard.jsx';
 import WalletCard from 'components/Client/WalletCard.jsx';
 import { ScaleLoader } from 'react-spinners';
 
-const dateFormat = require('dateformat');
-
 class NewSearch extends Component {
   constructor(props) {
     super(props);
@@ -24,6 +22,8 @@ class NewSearch extends Component {
     this.createSearchRequest = this.createSearchRequest.bind(this);
     this.onGetBalance = this.onGetBalance.bind(this);
     this._getGatewaysFromContract = this._getGatewaysFromContract.bind(this);
+    this._setCachedRequest = this._setCachedRequest.bind(this);
+    this._getInvokedGateways = this._getInvokedGateways.bind(this);
 
     this.state = {
       _isFetchingGateways: false,
@@ -56,7 +56,6 @@ class NewSearch extends Component {
       if (res === null || res === '') {
         return _this._getGatewaysFromContract(_this);
       }
-      console.log(res);
       var gateways = JSON.parse(res);
       if (gateways[_this.state.inputCity] === null ||
             gateways[_this.state.inputCity][_this.state.inputZip] === null) {
@@ -128,7 +127,7 @@ class NewSearch extends Component {
     }
 
     var _this = this;
-    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
+    var gasPrice = this.props.web3.toWei('0.000000010', 'ether'); // 5 wGwei
     this.setState({_isAppoving: true});
 
     // let's check if they have already approved a fee higher than this one
@@ -140,17 +139,20 @@ class NewSearch extends Component {
     .then((result) => {
       if (result.toNumber() >= this.state.costUVT) {
         _this.props.addNotification('Account already approved allowance of ' + result.toNumber() + ' UVT', 'success');
+        _this._setCachedRequest();
+        _this.props.onNewRequest();
+        this.props.addNotification('Gateways have been invoked, search in progress', 'info');
         _this.createSearchRequest();
       } else {
-        this.props.addNotification('Approving fee...', 'warning');
+        _this._setCachedRequest();
+        this.props.addNotification('Gateways have been invoked, search in progress', 'info');
+        this.props.addNotification('Submitting fee approval...', 'warning');
         this.props.uvtToken.approve(
           this.props.uvtCore.address,
           this.state.costUVT,
           {from: this.props.web3.eth.coinbase, gasPrice: gasPrice}
         )
         .then((results) => {
-          _this.props.addNotification('Fee approved!', 'success');
-          this.props.addNotification('Gateways have been invoked, search in progress', 'info');
           _this.createSearchRequest();
         })
         .catch((error) => {
@@ -161,17 +163,23 @@ class NewSearch extends Component {
     });
   }
 
+
+  _setCachedRequest() {
+    // cache data so we can immediately display on gateway ui
+    var data = {}
+    data['gatewayIds'] = this._getInvokedGateways();
+    data['endpointId'] = this.state.endpointId;
+    var _now = new Date();
+    data['date'] = _now;
+    this.props.redisClient.set('newSearch', JSON.stringify(data));
+    this.props.redisClient.set('currentSearchStatus', 'SEARCHING');
+  }
+
   approveAndCall() {
     var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
     var _this = this;
 
-    var toInvoke = [];
-    for (var id in this.state.shouldInvokeGateway) {
-      if (this.state.shouldInvokeGateway[id]) {
-        toInvoke.push(parseInt(id));
-      }
-    }
-
+    var toInvoke = this._getInvokedGateways();
     this.props.addNotification('Gateways have been invoked', 'info');
     var data = {}
     data['gatewayIds'] = toInvoke;
@@ -199,40 +207,35 @@ class NewSearch extends Component {
 
   }
 
-  createSearchRequest() {
-    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
-    var _this = this;
+  _getInvokedGateways() {
     var toInvoke = [];
     for (var id in this.state.shouldInvokeGateway) {
       if (this.state.shouldInvokeGateway[id]) {
         toInvoke.push(parseInt(id));
       }
     }
+    return toInvoke;
+  }
 
-    // cache data so we can immediately display on gateway ui
-    var data = {}
-    data['gatewayIds'] = toInvoke;
-    data['endpointId'] = this.state.endpointId;
-    var _now = new Date();
-    _now.setHours(_now.getHours() + 1);
-    data['date'] = dateFormat(_now, "ddd, mmmm dS h:MMtt");
-    this.props.redisClient.set('newSearch', JSON.stringify(data));
-
-    this.props.addNotification('Submitting request to Ethereum smart contract...', 'warning');
-    // this.props.uvtCore.createSearchRequest(
-    //   _this.props.web3.toBigNumber(this.state.endpointId),
-    //   toInvoke,
-    //   {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 3000000}
-    // )
-    // .then((results) => {
-    //   _this.props.addNotification('Request successful!');
-    //   _this.props.addNotification('Search now in progress...');
-    //   this.props.onNewRequest();
-    // })
-    // .catch((error) => {
-    //   console.log(error);
-    //   this.setState({_isAppoving: false});
-    // })
+  createSearchRequest() {
+    var gasPrice = this.props.web3.toWei('0.000000005', 'ether'); // 5 wGwei
+    var _this = this;
+    var toInvoke = this._getInvokedGateways();
+    this.props.addNotification('Depositing to escrow...', 'warning');
+    this.props.uvtCore.createSearchRequest(
+      _this.props.web3.toBigNumber(this.state.endpointId),
+      toInvoke,
+      {from: this.props.web3.eth.coinbase, gasPrice: gasPrice, gas: 3000000}
+    )
+    .then((results) => {
+      _this.props.addNotification('Deposit successful!');
+      //_this.props.redisClient.set('currentSearchStatus', 'SEARCHING');
+      _this.props.onNewRequest();
+    })
+    .catch((error) => {
+      console.log(error);
+      this.setState({_isAppoving: false});
+    });
   }
 
   render() {
