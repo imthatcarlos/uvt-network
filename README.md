@@ -2,9 +2,9 @@
 This nodejs application interacts with the smart contracts UVTCore, UVTToken,
 and OpenDeviceRegistry. Currently deployed on the Ropsten testnet, at addresses:
 ```
-UVTToken:           0x4dbd7410c285abf0df95424598fa54a7a53a9863
-UVTCore:            0x27cc7461e492dc20ef1cfe32f24d2e40cead2823
-OpenDeviceRegistry: 0x20b07d5d3113d7c5c0f9407d59b80ed732aafbca
+UVTToken:           0x692def9b34d77fc6a0508e170b49e37405bd12f5
+UVTCore:            0x07efab77857bec0085dd0ed4457c8c82e7d9ead1
+OpenDeviceRegistry: 0xdde5eb3cd07e7aca1377af8aeea23f1636ec1ca3
 ```
 
 ### Setup
