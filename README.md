@@ -27,6 +27,14 @@ in order for the script to access test ETH accounts.
 truffle exec scripts/seed.js
 ```
 
+And for Ropsten
+```
+truffle exec scripts/seed_ropsten.js --network ropsten
+```
+
+For populating, transferring contract ownership and destroying contracts. Make
+sure `mnemonic` in `utils/getWalletProvider.js` is set to your Metamask seed words
+
 ### Run tests
 ```
 truffle test

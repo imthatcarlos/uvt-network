@@ -39,7 +39,7 @@ const SEED_GATEWAY_DATA = [
   ["127.0.0.7", "41.9536108", "-87.7821306", "Chicago", "60641", "4159+W+Addison+St/Chicago,+IL+60641"]
 ]
 
-const NEW_OWNER_ADDRESS="0x4D801B0a7db8097BeCF2B3142B8245923781e1c4"
+const NEW_OWNER_ADDRESS="0x6C75429e1f733259E608Aa15C7E73603590f1B9C"
 
 async function mintToken(contracts, ownerAccount) {
   console.log("minting tokens...");
